@@ -1,30 +1,24 @@
 # Dasterm Troubleshooting
 
-Dokumen ini membantu memperbaiki masalah umum di Dasterm v2.
+This document helps you fix common Dasterm v2 issues.
 
 ---
 
-## 1. Command `dasterm` Tidak Ditemukan
+## 1. `dasterm` Command Not Found
 
-Cek file binary:
+Check binary:
 
 ```bash
 ls -la /usr/local/bin/dasterm
 ```
 
-Jika tidak ada, install/repair:
+If missing, repair:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
 ```
 
-Pilih:
-
-```text
-4) Repair
-```
-
-Jika permission salah:
+If permission is wrong:
 
 ```bash
 sudo chmod +x /usr/local/bin/dasterm
@@ -32,9 +26,9 @@ sudo chmod +x /usr/local/bin/dasterm
 
 ---
 
-## 2. Slash Command `/help` Tidak Jalan
+## 2. `/help` Does Not Work
 
-Slash command adalah alias shell.
+Slash commands are shell aliases.
 
 Reload shell:
 
@@ -42,25 +36,25 @@ Reload shell:
 source ~/.bashrc
 ```
 
-Atau untuk Zsh:
+Or for Zsh:
 
 ```bash
 source ~/.zshrc
 ```
 
-Cek alias:
+Check alias:
 
 ```bash
 alias /help
 ```
 
-Jika tidak ada, jalankan:
+If alias is missing:
 
 ```bash
 dasterm config
 ```
 
-Aktifkan:
+Enable slash aliases:
 
 ```text
 Enable slash aliases? on
@@ -68,160 +62,142 @@ Enable slash aliases? on
 
 ---
 
-## 3. Dashboard Tidak Muncul Saat Login
+## 3. Dashboard Does Not Show at Login
 
-Cek config:
+Check config:
 
 ```bash
 cat ~/.config/dasterm/config.env
 ```
 
-Pastikan:
+Make sure:
 
 ```env
 DASTERM_SHOW="always"
 ```
 
-Jika `manual`, ubah via:
+If it is `manual`, change it:
 
 ```bash
 /config
 ```
 
-Atau:
+Or:
 
 ```bash
 dasterm config
 ```
 
-Cek shell block:
+Check shell block:
 
 ```bash
 grep -n "DASTERM_V2_BEGIN" ~/.bashrc ~/.zshrc 2>/dev/null
 ```
 
-Jika tidak ada, repair:
+If missing, repair:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
-```
-
-Pilih:
-
-```text
-4) Repair
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
 ```
 
 ---
 
-## 4. Dashboard Muncul Dua Kali
+## 4. Dashboard Shows Twice
 
-Kemungkinan shell nested atau `.bashrc` dan `.zshrc` sama-sama terpanggil.
+Possible causes:
 
-Cek block:
+```text
+Nested shell
+Duplicate shell block
+Both .bashrc and .zshrc loaded unexpectedly
+```
+
+Check:
 
 ```bash
 grep -n "DASTERM_V2_BEGIN" ~/.bashrc ~/.zshrc 2>/dev/null
 ```
 
-Hapus duplikat dengan repair atau uninstall/install ulang.
-
-Dasterm memakai:
+Repair:
 
 ```bash
-DASTERM_SESSION_DONE
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
 ```
-
-Agar tidak tampil berulang dalam satu session.
 
 ---
 
-## 5. Tampilan Berantakan
+## 5. Display Looks Broken
 
-Penyebab umum:
+Common causes:
 
 ```text
-Terminal terlalu sempit
-Font tidak mendukung box drawing
-NO_COLOR aktif
-TERM tidak cocok
+Terminal too narrow
+Font does not support box drawing
+NO_COLOR is active
+TERM value is unusual
 ```
 
-Coba:
+Check:
 
 ```bash
-echo $TERM
+echo "$TERM"
 tput cols
 ```
 
-Gunakan mode lite:
+Use Lite mode:
 
 ```bash
 /lite
 ```
 
-Atau:
-
-```bash
-dasterm lite
-```
-
-Gunakan theme mono:
+Use Mono theme:
 
 ```bash
 /config
 ```
 
-Pilih:
-
-```text
-Mono
-```
-
 ---
 
-## 6. Logo Full Tidak Bagus
+## 6. Full Mode Logo Is Not Good
 
-Full mode memakai:
+Full mode uses:
 
 ```text
 fastfetch
 neofetch
-fallback ASCII Dasterm
+fallback Dasterm ASCII
 ```
 
-Install neofetch:
+Install Neofetch:
 
 ```bash
 sudo apt update
 sudo apt install neofetch
 ```
 
-Jika tersedia, fastfetch lebih modern:
+If available, Fastfetch is better:
 
 ```bash
 sudo apt install fastfetch
 ```
 
-Pada beberapa distro, nama package fastfetch berbeda.
-
 ---
 
-## 7. Speedtest Belum Ada
+## 7. No Saved Speedtest Result
 
-Jika dashboard menampilkan:
+If dashboard shows:
 
 ```text
 No saved speedtest result. Run /respeedtest.
 ```
 
-Jalankan:
+Run:
 
 ```bash
 /respeedtest
 ```
 
-Atau:
+Or:
 
 ```bash
 dasterm respeedtest
@@ -229,50 +205,48 @@ dasterm respeedtest
 
 ---
 
-## 8. `/respeedtest` Gagal
+## 8. `/respeedtest` Fails
 
-Cek dependency:
+Check Dasterm health:
 
 ```bash
 dasterm doctor
 ```
 
-Cek internet:
+Check internet:
 
 ```bash
 ping -c 1 1.1.1.1
 ```
 
-Install dependency dasar:
+Install basic tools:
 
 ```bash
 sudo apt update
 sudo apt install curl jq speedtest-cli
 ```
 
-Jika speedtest-cli tidak tersedia, Dasterm masih mencoba curl fallback.
-
 ---
 
-## 9. Speedtest Hanya Ada Download
+## 9. Speedtest Only Shows Download
 
-Itu bisa terjadi jika Dasterm memakai curl fallback.
+This can happen when Dasterm uses curl fallback.
 
-Curl fallback hanya mengukur download dari Cloudflare.
+Curl fallback only measures download.
 
-Untuk hasil lengkap, install speedtest provider:
+For complete speedtest, install:
 
 ```bash
 sudo apt install speedtest-cli
 ```
 
-Atau gunakan Ookla Speedtest CLI resmi.
+Or install official Ookla Speedtest CLI.
 
 ---
 
-## 10. Provider/Region Speedtest Kosong
+## 10. Provider or Region Is Empty
 
-Tidak semua provider speedtest memberikan data:
+Some speedtest providers do not return:
 
 ```text
 provider
@@ -282,40 +256,42 @@ packet loss
 jitter
 ```
 
-Jika field kosong, Dasterm menyembunyikannya agar output rapi.
+Dasterm hides empty fields to keep output clean.
 
 ---
 
-## 11. Public IP Lambat atau N/A
+## 11. Public IP Is Slow or N/A
 
-Public IP memakai request internet dan dicache.
-
-Jika N/A:
+Public IP uses:
 
 ```text
-Internet tidak tersedia
-api.ipify.org tidak bisa diakses
-curl belum terinstall
-Firewall memblokir request
+https://api.ipify.org
 ```
 
-Cek:
+Check:
 
 ```bash
 curl -fsSL https://api.ipify.org
 ```
 
+If it fails:
+
+```text
+Internet may be unavailable
+curl may be missing
+Firewall may block request
+api.ipify.org may be unreachable
+```
+
 ---
 
-## 12. `/storage` Lama
+## 12. `/storage` Is Slow
 
-`/storage` melakukan scan folder besar memakai `du`.
+`/storage` scans large directories using `du`.
 
-Pada server besar, bisa butuh beberapa detik.
+On large servers, this can take a few seconds.
 
-Dasterm memberi timeout, tetapi beberapa filesystem tetap lambat.
-
-Jika sangat lambat, jalankan manual:
+Manual check:
 
 ```bash
 du -xhd 1 / 2>/dev/null | sort -hr | head
@@ -325,28 +301,28 @@ du -xhd 1 / 2>/dev/null | sort -hr | head
 
 ## 13. Docker Info Error
 
-Jika output Docker:
+If Docker shows:
 
 ```text
 installed but not reachable
 ```
 
-Kemungkinan:
+Possible causes:
 
 ```text
-Docker daemon mati
-User belum masuk group docker
-Butuh sudo
-Socket permission terbatas
+Docker daemon is stopped
+User is not in docker group
+Docker socket permission is restricted
+Need sudo
 ```
 
-Cek:
+Check:
 
 ```bash
 systemctl status docker
 ```
 
-Atau:
+Or:
 
 ```bash
 docker info
@@ -354,51 +330,49 @@ docker info
 
 ---
 
-## 14. PM2 Tidak Terdeteksi
+## 14. PM2 Not Detected
 
-Pastikan PM2 ada di PATH shell kamu:
+Check:
 
 ```bash
 which pm2
 pm2 jlist
 ```
 
-Jika PM2 diinstall via user tertentu, root mungkin tidak melihat PM2 user tersebut.
+If PM2 is installed for another user, current user may not see it.
 
 ---
 
 ## 15. `/security` Permission Denied
 
-Beberapa file seperti SSH config atau log auth mungkin butuh root.
+Some logs/config files may need root.
 
-Coba:
+Try:
 
 ```bash
 sudo dasterm security
 ```
 
-Namun hati-hati jika prompt dan HOME berubah saat memakai sudo.
+Be careful because `sudo` may change `$HOME`.
 
 ---
 
-## 16. Failed Login 24h N/A
+## 16. Failed Login 24h Shows N/A
 
-Penyebab:
+Possible causes:
 
 ```text
-journalctl tidak tersedia
-Log auth tidak tersedia
-Permission terbatas
-Distro memakai path log berbeda
+journalctl unavailable
+auth log unavailable
+permission restricted
+different distro log path
 ```
 
-Dasterm akan menampilkan N/A jika tidak bisa membaca.
+Dasterm shows `N/A` when it cannot read the data.
 
 ---
 
-## 17. `/doctor` Menampilkan Dependency Missing
-
-Install dependency sesuai distro.
+## 17. `/doctor` Shows Missing Dependencies
 
 Ubuntu/Debian:
 
@@ -427,30 +401,30 @@ sudo dnf install curl jq coreutils util-linux procps-ng iproute gawk sed grep pc
 
 ---
 
-## 18. AI Tidak Menjawab
+## 18. AI Does Not Answer
 
-Cek:
+Run:
 
 ```bash
 /ai-test
 ```
 
-Atau:
+Or:
 
 ```bash
 dasterm ai-test
 ```
 
-Pastikan:
+Make sure:
 
 ```text
-curl tersedia
-jq tersedia
-internet tersedia
-provider tidak down
+curl is installed
+jq is installed
+internet is available
+AI provider is not down
 ```
 
-Cek provider:
+Check provider:
 
 ```bash
 /ai-provider
@@ -464,140 +438,122 @@ Reset provider:
 
 ---
 
-## 19. AI Menghasilkan JSON Rusak
+## 19. AI Output Is Broken JSON
 
-Dasterm mencoba mengambil JSON dari output AI.
+Dasterm tries to extract JSON from AI output.
 
-Jika tetap rusak, output dianggap sebagai teks biasa.
+If it fails, the output is treated as normal text.
 
-Command tidak akan dijalankan jika field `cmd` tidak valid.
+No command runs unless a valid and safe `cmd` is found.
 
 ---
 
-## 20. AI Command Diblokir
+## 20. AI Command Is Blocked
 
-Jika muncul:
+If you see:
 
 ```text
 AI suggested a command, but Dasterm blocked it...
 ```
 
-Artinya command tidak masuk whitelist aman.
+It means the command is not in the safe whitelist.
 
-Ini normal untuk keamanan.
-
-Gunakan command Dasterm manual jika yakin:
-
-```bash
-dasterm help
-```
+This is normal security behavior.
 
 ---
 
-## 21. AI Memory Salah Konteks
+## 21. AI Memory Has Wrong Context
 
-Hapus memory:
+Clear memory:
 
 ```bash
 /clear-brain-ai
 ```
 
-Lihat memory:
+Show memory:
 
 ```bash
 /brain-ai
 ```
 
-Memory reset otomatis setiap tanggal berganti berdasarkan WIB.
+Memory resets automatically when the WIB date changes.
 
 ---
 
-## 22. `/update` Gagal
+## 22. `/update` Fails
 
-Cek internet:
+Check internet:
 
 ```bash
 curl -I https://raw.githubusercontent.com
 ```
 
-Cek repo config:
+Check repo config:
 
 ```bash
 grep DASTERM_REPO ~/.config/dasterm/config.env
 ```
 
-Repair manual:
+Repair:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
-```
-
-Pilih:
-
-```text
-4) Repair
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
 ```
 
 ---
 
-## 23. GitHub Actions Gagal di ShellCheck
+## 23. GitHub Actions Fails
 
-ShellCheck sering memberi warning style.
-
-Cek lokal:
+Run locally:
 
 ```bash
-shellcheck -x install.sh bin/dasterm lib/*.sh
+bash -n install.sh
+bash -n bin/dasterm
+bash -n lib/*.sh
 ```
 
-Jika warning benar, perbaiki.
+ShellCheck:
 
-Jika false positive, tambahkan alasan di PR.
+```bash
+shellcheck -x -s bash --severity=error install.sh bin/dasterm lib/*.sh
+```
 
 ---
 
-## 24. Worker Badge Selalu 0
+## 24. Worker Badge Always Shows 0
 
-Cek config Dasterm:
+Check config:
 
 ```bash
 grep TELEMETRY ~/.config/dasterm/config.env
 ```
 
-Harus ada:
+Required:
 
 ```env
 DASTERM_TELEMETRY="on"
 DASTERM_TELEMETRY_ENDPOINT="https://your-worker.example.com/api/usage"
 ```
 
-Cek worker:
+Check stats:
 
 ```bash
 curl https://your-worker.example.com/stats
-```
-
-Cek kirim manual:
-
-```bash
-curl -X POST "https://your-worker.example.com/api/usage" \
-  -H "Content-Type: application/json" \
-  -d '{"event":"install","version":"2.0.0","distro":"ubuntu","distro_version":"24.04","arch":"x86_64","virt":"kvm","lang":"id","mode":"lite","machine_hash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","date":"2026-05-10"}'
 ```
 
 ---
 
 ## 25. Worker Rate Limited
 
-Jika response:
+If response says:
 
 ```text
 rate limited
 ```
 
-Tunggu sampai bucket harian reset.
+Wait for daily reset.
 
-Limit default:
+Default limits:
 
 ```text
 install max 3 per machine per day
@@ -608,21 +564,15 @@ IP max 120 per event per day
 
 ---
 
-## 26. Uninstall Tidak Bersih
+## 26. Uninstall Is Not Clean
 
-Jalankan installer:
+Run:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --uninstall
 ```
 
-Pilih:
-
-```text
-3) Uninstall
-```
-
-Cek sisa file:
+Check leftovers:
 
 ```bash
 ls -la /usr/local/bin/dasterm
@@ -632,32 +582,30 @@ ls -la ~/.cache/dasterm
 grep -n "DASTERM_V2" ~/.bashrc ~/.zshrc 2>/dev/null
 ```
 
-Hapus manual jika perlu.
-
 ---
 
-## 27. Masih Error?
+## 27. Still Error?
 
-Jalankan:
+Run:
 
 ```bash
 dasterm doctor
 ```
 
-Lalu buat issue:
+Then create an issue:
 
 ```text
 https://github.com/akaanakbaik/dastermv2/issues
 ```
 
-Sertakan:
+Include:
 
 ```text
-Output /doctor
+Output from /doctor
 OS
 Shell
-Command yang error
-Langkah reproduksi
+Command that failed
+Steps to reproduce
 ```
 
-Jangan kirim token, password, private key, atau data sensitif.
+Do not include tokens, passwords, private keys, or sensitive data.
