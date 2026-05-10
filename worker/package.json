@@ -1,0 +1,16 @@
+{
+  "name": "dasterm-telemetry-worker",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create dasterm_telemetry",
+    "db:migrate": "wrangler d1 execute dasterm_telemetry --file=./schema.sql",
+    "db:local": "wrangler d1 execute dasterm_telemetry --local --file=./schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "latest"
+  }
+}
