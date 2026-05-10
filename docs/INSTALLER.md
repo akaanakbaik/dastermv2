@@ -1,55 +1,43 @@
 # Dasterm v2 Installer
 
-Dasterm v2 memakai satu installer interaktif untuk:
+Dasterm v2 uses one interactive installer for:
 
 ```text
-Install
-Update
+Install / Update
 Reconfigure
 Uninstall
 Repair
 Exit
 ```
 
-Installer utama:
+Recommended command:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
 ```
+
+Dasterm installs files to:
+
+```text
+/usr/local/bin/dasterm
+/usr/local/share/dasterm/
+```
+
+Because of that, install requires `sudo` or root access.
 
 ---
 
-## 1. Tujuan Installer
+## 1. Main Menu
 
-Installer dibuat agar user tidak perlu mengingat banyak command.
+Run:
 
-Satu command bisa dipakai untuk:
-
-```text
-Install pertama kali
-Update file
-Ubah config
-Repair jika file rusak
-Uninstall bersih
+```bash
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
 ```
 
----
-
-## 2. Menu Utama
-
-Saat installer dijalankan:
+Menu:
 
 ```text
-╔══════════════════════════════════════════════════════════════╗
-║                         DASTERM V2                          ║
-║            Interactive Linux Terminal Dashboard              ║
-╚══════════════════════════════════════════════════════════════╝
-
-Choose language / Pilih bahasa
-1) Indonesia
-2) English
-
-Choose action
 1) Install / Update
 2) Reconfigure
 3) Uninstall
@@ -59,54 +47,84 @@ Choose action
 
 ---
 
+## 2. Direct Actions
+
+Install directly:
+
+```bash
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --install
+```
+
+Reconfigure directly:
+
+```bash
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --reconfigure
+```
+
+Repair directly:
+
+```bash
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
+```
+
+Uninstall directly:
+
+```bash
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --uninstall
+```
+
+---
+
 ## 3. Install / Update
 
-Pilih:
+Choose:
 
 ```text
 1) Install / Update
 ```
 
-Installer akan:
+The installer will:
 
 ```text
-Mendeteksi target user
-Membaca OS dan package manager
-Meminta pilihan bahasa
-Meminta pilihan mode
-Meminta User@Host
-Meminta theme
-Meminta pengaturan dashboard login
-Meminta pengaturan prompt
-Meminta pengaturan slash alias
-Meminta pilihan speedtest awal
-Meminta pilihan telemetry anonim
-Install dependency dasar
-Download file Dasterm dari GitHub
-Install binary ke /usr/local/bin/dasterm
-Install library ke /usr/local/share/dasterm/lib
-Simpan config ke ~/.config/dasterm/config.env
-Inject shell integration ke .bashrc dan .zshrc
-Menjalankan speedtest awal jika dipilih
+Detect target user
+Detect OS and package manager
+Ask language
+Ask dashboard mode
+Ask User@Host
+Ask theme
+Ask dashboard login behavior
+Ask prompt behavior
+Ask slash alias behavior
+Ask initial speedtest option
+Ask anonymous telemetry option
+Install basic dependencies
+Download Dasterm files from GitHub
+Install binary to /usr/local/bin/dasterm
+Install libraries to /usr/local/share/dasterm/lib
+Save config to ~/.config/dasterm/config.env
+Inject shell integration to .bashrc and .zshrc
+Run initial speedtest if selected
 ```
 
 ---
 
 ## 4. Reconfigure
 
-Pilih:
+Choose:
 
 ```text
 2) Reconfigure
 ```
 
-Fungsi:
+Or run:
 
-```text
-Mengubah config tanpa menghapus file Dasterm.
+```bash
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --reconfigure
 ```
 
-Yang bisa diubah:
+Reconfigure changes user preferences without removing Dasterm files.
+
+You can change:
 
 ```text
 Language
@@ -114,13 +132,13 @@ Mode
 Theme
 User@Host
 Dashboard login behavior
-Prompt custom
-Slash alias
-Telemetry
+Prompt custom behavior
+Slash alias behavior
+Telemetry setting
 Initial speedtest option
 ```
 
-Reconfigure menyimpan ulang:
+Config is saved to:
 
 ```text
 ~/.config/dasterm/config.env
@@ -130,79 +148,90 @@ Reconfigure menyimpan ulang:
 
 ## 5. Uninstall
 
-Pilih:
+Choose:
 
 ```text
 3) Uninstall
 ```
 
-Installer akan meminta konfirmasi:
+Or run:
+
+```bash
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --uninstall
+```
+
+The installer asks:
 
 ```text
 This will remove Dasterm files and shell integration.
 Continue uninstall? [y/N]
 ```
 
-Jika user setuju, Dasterm menghapus:
+If approved, uninstall removes:
 
 ```text
 /usr/local/bin/dasterm
-/usr/local/share/dasterm
+/usr/local/share/dasterm/
 ~/.config/dasterm
 ~/.cache/dasterm
-Dasterm shell block dari ~/.bashrc
-Dasterm shell block dari ~/.zshrc
+Dasterm shell block from ~/.bashrc
+Dasterm shell block from ~/.zshrc
 ```
 
-Uninstall tidak menghapus file lain di luar daftar tersebut.
+Uninstall does not remove unrelated user files, Docker files, projects, VPS data, or services.
 
 ---
 
 ## 6. Repair
 
-Pilih:
+Choose:
 
 ```text
 4) Repair
 ```
 
-Repair dipakai jika:
+Or run:
 
-```text
-Binary hilang
-Library hilang
-Update gagal
-Shell integration rusak
-Config masih ada tapi Dasterm error
+```bash
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
 ```
 
-Repair akan:
+Repair is useful when:
 
 ```text
-Install dependency dasar
-Download ulang file dari GitHub
+Binary is missing
+Library files are missing
+Shell integration is broken
+Update failed
+Dasterm command does not work normally
+```
+
+Repair will:
+
+```text
+Install basic dependencies
+Download files again
 Replace binary
-Replace library
-Inject ulang shell integration
+Replace libraries
+Refresh shell integration
+Keep user config
 ```
-
-Repair tidak menghapus config user.
 
 ---
 
 ## 7. Exit
 
-Pilih:
+Choose:
 
 ```text
 5) Exit
 ```
 
-Installer langsung keluar tanpa mengubah sistem.
+The installer exits without changes.
 
 ---
 
-## 8. File yang Diinstall
+## 8. Installed Files
 
 Binary:
 
@@ -210,13 +239,13 @@ Binary:
 /usr/local/bin/dasterm
 ```
 
-Library:
+Libraries:
 
 ```text
 /usr/local/share/dasterm/lib/
 ```
 
-Config user:
+User config:
 
 ```text
 ~/.config/dasterm/config.env
@@ -228,7 +257,7 @@ Cache:
 ~/.cache/dasterm/
 ```
 
-Log:
+Logs:
 
 ```text
 ~/.local/share/dasterm/logs/
@@ -245,7 +274,7 @@ Shell integration:
 
 ## 9. Shell Integration
 
-Installer menambahkan block kecil:
+The installer adds a small block:
 
 ```bash
 ### DASTERM_V2_BEGIN ###
@@ -259,28 +288,27 @@ fi
 ### DASTERM_V2_END ###
 ```
 
-Tujuan:
+Purpose:
 
 ```text
-Load slash alias
-Load prompt custom jika aktif
-Menampilkan dashboard saat login jika aktif
-Tidak menaruh script panjang di .bashrc
-Lebih mudah dihapus
-Lebih aman
+Load slash aliases
+Apply custom prompt if enabled
+Show dashboard at login if enabled
+Keep .bashrc/.zshrc clean
+Make uninstall easy
 ```
 
 ---
 
 ## 10. Config File
 
-Config disimpan di:
+Config:
 
 ```text
 ~/.config/dasterm/config.env
 ```
 
-Contoh:
+Example:
 
 ```env
 DASTERM_VERSION="2.0.0"
@@ -303,295 +331,31 @@ Permission:
 600
 ```
 
-Artinya hanya user pemilik yang bisa membaca dan menulis.
-
 ---
 
-## 11. Bahasa Installer
+## 11. If You Run Without Sudo
 
-Installer mendukung:
-
-```text
-Indonesia
-English
-```
-
-Bahasa yang dipilih akan disimpan sebagai:
-
-```env
-DASTERM_LANG="id"
-```
-
-Atau:
-
-```env
-DASTERM_LANG="en"
-```
-
----
-
-## 12. Mode Installer
-
-Mode dashboard:
-
-```text
-Lite
-Full
-```
-
-Lite:
-
-```text
-Cepat
-Ringkas
-Logo kecil
-Cocok VPS kecil
-```
-
-Full:
-
-```text
-Lengkap
-Logo besar
-Fastfetch/Neofetch jika ada
-Cocok VPS utama
-```
-
----
-
-## 13. Theme Installer
-
-Theme:
-
-```text
-Pastel
-Cyber
-Ocean
-Mono
-```
-
-Theme hanya memengaruhi warna tampilan.
-
-Tidak memengaruhi logic atau data.
-
----
-
-## 14. Prompt Custom
-
-Jika aktif:
-
-```env
-DASTERM_PROMPT="on"
-```
-
-Dasterm akan mengatur prompt terminal:
-
-```text
-user@host:/path$
-```
-
-Berdasarkan:
-
-```env
-DASTERM_USERHOST="root@aka"
-```
-
-Jika tidak ingin Dasterm mengubah prompt:
-
-```env
-DASTERM_PROMPT="off"
-```
-
-Atau melalui:
+If you run:
 
 ```bash
-/config
+bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
 ```
+
+The installer will show:
+
+```text
+Root access is required for this action.
+Run:
+  sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
+```
+
+This is normal.
 
 ---
 
-## 15. Slash Alias
+## 12. Manual Download
 
-Jika aktif:
-
-```env
-DASTERM_SLASH="on"
-```
-
-Dasterm akan membuat alias:
-
-```bash
-alias /help='dasterm help'
-alias /status='dasterm status'
-alias /respeedtest='dasterm respeedtest'
-alias /ai='dasterm ai'
-alias /update='dasterm update'
-```
-
-Jika tidak aktif:
-
-```env
-DASTERM_SLASH="off"
-```
-
-Gunakan command asli:
-
-```bash
-dasterm help
-dasterm status
-dasterm ai "halo"
-```
-
----
-
-## 16. Speedtest Awal
-
-Installer bertanya:
-
-```text
-Run initial speedtest and save result? [Y/n]
-```
-
-Jika yes:
-
-```text
-Dasterm menjalankan speedtest sekali.
-Hasil disimpan ke ~/.cache/dasterm/speedtest.json.
-Dashboard login membaca hasil itu.
-```
-
-Jika no:
-
-```text
-Speedtest tidak dijalankan.
-Dashboard menampilkan info bahwa cache belum ada.
-```
-
-Kapan pun bisa jalankan:
-
-```bash
-/respeedtest
-```
-
----
-
-## 17. Telemetry
-
-Installer bertanya:
-
-```text
-Allow anonymous statistics for README badges? [y/N]
-```
-
-Default:
-
-```text
-No
-```
-
-Jika yes:
-
-```env
-DASTERM_TELEMETRY="on"
-```
-
-Namun telemetry tetap membutuhkan endpoint:
-
-```env
-DASTERM_TELEMETRY_ENDPOINT="https://your-worker.example.com/api/usage"
-```
-
-Jika endpoint kosong, tidak ada data yang dikirim.
-
----
-
-## 18. Dependency
-
-Installer mencoba install dependency dasar sesuai package manager.
-
-Package manager yang didukung:
-
-```text
-apt-get
-dnf
-yum
-pacman
-zypper
-apk
-```
-
-Dependency dasar:
-
-```text
-curl
-ca-certificates
-jq
-coreutils
-util-linux
-procps
-iproute2
-gawk
-sed
-grep
-pciutils
-lsb-release
-bc
-```
-
-Jika offline, installer akan melewati dependency install.
-
----
-
-## 19. Permission Root
-
-Karena file dipasang ke:
-
-```text
-/usr/local/bin
-/usr/local/share
-```
-
-Install membutuhkan root/sudo.
-
-Jika installer dijalankan tanpa root tapi `sudo` tersedia, installer mencoba memakai sudo.
-
-Jika sudo tidak ada, installer meminta user menjalankan sebagai root.
-
----
-
-## 20. Lock Installer
-
-Installer memakai lock file:
-
-```text
-/tmp/dasterm-install.lock
-```
-
-Tujuan:
-
-```text
-Mencegah dua proses installer berjalan bersamaan.
-Mencegah file tertimpa secara bersamaan.
-Mencegah race condition.
-```
-
----
-
-## 21. Temporary Directory
-
-Installer memakai:
-
-```text
-/tmp/dasterm-install-<pid>
-```
-
-Setelah selesai, folder sementara dihapus otomatis.
-
----
-
-## 22. Cara Install Manual
-
-Jika tidak mau pakai one-liner, bisa:
+If your shell does not support process substitution:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o install.sh
@@ -599,45 +363,26 @@ chmod +x install.sh
 sudo ./install.sh
 ```
 
----
-
-## 23. Cara Repair Manual
+Direct actions:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
-```
-
-Pilih:
-
-```text
-4) Repair
+sudo ./install.sh --install
+sudo ./install.sh --reconfigure
+sudo ./install.sh --repair
+sudo ./install.sh --uninstall
 ```
 
 ---
 
-## 24. Cara Uninstall Manual
+## 13. After Install
 
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
-```
-
-Pilih:
-
-```text
-3) Uninstall
-```
-
----
-
-## 25. Setelah Install
-
-Jalankan:
+Run:
 
 ```bash
 source ~/.bashrc
 ```
 
-Atau buka terminal baru.
+Or open a new terminal.
 
 Test:
 
@@ -647,67 +392,63 @@ dasterm help
 dasterm doctor
 ```
 
-Jika slash alias aktif:
+If slash aliases are enabled:
 
 ```bash
 /help
-/doctor
 /status
+/doctor
 ```
 
 ---
 
-## 26. Troubleshooting Installer
+## 14. Troubleshooting Installer
 
-Jika curl gagal:
+If `curl` is missing:
 
 ```bash
 sudo apt install curl ca-certificates
 ```
 
-Jika jq tidak ada:
+If `jq` is missing:
 
 ```bash
 sudo apt install jq
 ```
 
-Jika slash command tidak aktif:
+If slash commands are not active:
 
 ```bash
 source ~/.bashrc
 ```
 
-Jika command `dasterm` tidak ditemukan:
+If `dasterm` is not found:
 
 ```bash
 ls -la /usr/local/bin/dasterm
 ```
 
-Jika tidak ada, repair:
+Repair:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
-```
-
-Pilih:
-
-```text
-4) Repair
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
 ```
 
 ---
 
-## 27. Kesimpulan
+## 15. Summary
 
-Installer Dasterm v2 dibuat agar:
+The recommended command is:
 
-```text
-Satu jalur
-Interaktif
-Aman
-Mudah uninstall
-Mudah repair
-Mudah update
-Tidak mengotori .bashrc dengan script panjang
-Config user tetap rapi
+```bash
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
+```
+
+Direct commands:
+
+```bash
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --install
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --reconfigure
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --uninstall
 ```
