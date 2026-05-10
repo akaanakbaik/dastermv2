@@ -1,0 +1,285 @@
+#!/usr/bin/env bash
+set -uo pipefail
+IFS=$' \t\n'
+
+DASTERM_PREFIX="/usr/local/share/dasterm"
+DASTERM_LIB="${DASTERM_PREFIX}/lib"
+DASTERM_HOME="${HOME}"
+DASTERM_CONFIG_DIR="${DASTERM_HOME}/.config/dasterm"
+DASTERM_CACHE_DIR="${DASTERM_HOME}/.cache/dasterm"
+DASTERM_DATA_DIR="${DASTERM_HOME}/.local/share/dasterm"
+DASTERM_LOG_DIR="${DASTERM_DATA_DIR}/logs"
+DASTERM_CONFIG="${DASTERM_CONFIG_DIR}/config.env"
+DASTERM_VERSION_FALLBACK="2.0.0"
+
+[ -f "${DASTERM_LIB}/core.sh" ] && . "${DASTERM_LIB}/core.sh"
+[ -f "${DASTERM_LIB}/i18n.sh" ] && . "${DASTERM_LIB}/i18n.sh"
+
+dasterm_bootstrap_minimal() {
+  mkdir -p "$DASTERM_CONFIG_DIR" "$DASTERM_CACHE_DIR" "$DASTERM_LOG_DIR"
+  if [ ! -f "$DASTERM_CONFIG" ]; then
+    cat > "$DASTERM_CONFIG" <<EOF
+DASTERM_VERSION="$DASTERM_VERSION_FALLBACK"
+DASTERM_LANG="id"
+DASTERM_MODE="lite"
+DASTERM_THEME="pastel"
+DASTERM_USERHOST="$(whoami)@$(hostname 2>/dev/null || echo linux)"
+DASTERM_SHOW="always"
+DASTERM_PROMPT="on"
+DASTERM_SLASH="on"
+DASTERM_TELEMETRY="off"
+DASTERM_REPO_OWNER="akaanakbaik"
+DASTERM_REPO_NAME="dastermv2"
+DASTERM_REPO_BRANCH="main"
+EOF
+    chmod 600 "$DASTERM_CONFIG"
+  fi
+}
+
+dasterm_load_all() {
+  dasterm_bootstrap_minimal
+  [ -f "$DASTERM_CONFIG" ] && . "$DASTERM_CONFIG"
+  for f in render system network speedtest ai update storage security services doctor telemetry; do
+    [ -f "${DASTERM_LIB}/${f}.sh" ] && . "${DASTERM_LIB}/${f}.sh"
+  done
+}
+
+dasterm_shell_init() {
+  dasterm_bootstrap_minimal
+  [ -f "$DASTERM_CONFIG" ] && . "$DASTERM_CONFIG"
+  if [ "${DASTERM_PROMPT:-on}" = "on" ]; then
+    local uh user host
+    uh="${DASTERM_USERHOST:-$(whoami)@$(hostname)}"
+    user="${uh%%@*}"
+    host="${uh#*@}"
+    printf "export PS1='\\[\\033[1;32m\\]%s@%s\\[\\033[0m\\]:\\[\\033[1;34m\\]\\w\\[\\033[0m\\]\\$ '\n" "$user" "$host"
+  fi
+  if [ "${DASTERM_SLASH:-on}" = "on" ]; then
+    cat <<'EOF'
+alias /help='dasterm help'
+alias /status='dasterm status'
+alias /lite='dasterm lite'
+alias /full='dasterm full'
+alias /speedtest='dasterm speedtest'
+alias /respeedtest='dasterm respeedtest'
+alias /network='dasterm network'
+alias /storage='dasterm storage'
+alias /services='dasterm services'
+alias /security='dasterm security'
+alias /doctor='dasterm doctor'
+alias /ai='dasterm ai'
+alias /brain-ai='dasterm brain-ai'
+alias /clear-brain-ai='dasterm clear-brain-ai'
+alias /ai-provider='dasterm ai-provider'
+alias /ai-reset-provider='dasterm ai-reset-provider'
+alias /ai-test='dasterm ai-test'
+alias /config='dasterm config'
+alias /update='dasterm update'
+alias /uninstall='dasterm uninstall'
+alias /version='dasterm version'
+alias /about='dasterm about'
+EOF
+  fi
+}
+
+dasterm_help() {
+  dasterm_load_all
+  dasterm_title "$(dasterm_t help_title)"
+  dasterm_kv "/help" "$(dasterm_t help_help)"
+  dasterm_kv "/status" "$(dasterm_t help_status)"
+  dasterm_kv "/lite" "$(dasterm_t help_lite)"
+  dasterm_kv "/full" "$(dasterm_t help_full)"
+  dasterm_kv "/speedtest" "$(dasterm_t help_speedtest)"
+  dasterm_kv "/respeedtest" "$(dasterm_t help_respeedtest)"
+  dasterm_kv "/network" "$(dasterm_t help_network)"
+  dasterm_kv "/storage" "$(dasterm_t help_storage)"
+  dasterm_kv "/services" "$(dasterm_t help_services)"
+  dasterm_kv "/security" "$(dasterm_t help_security)"
+  dasterm_kv "/doctor" "$(dasterm_t help_doctor)"
+  dasterm_kv "/ai <text>" "$(dasterm_t help_ai)"
+  dasterm_kv "/brain-ai" "$(dasterm_t help_brain)"
+  dasterm_kv "/clear-brain-ai" "$(dasterm_t help_clear_brain)"
+  dasterm_kv "/ai-provider" "$(dasterm_t help_provider)"
+  dasterm_kv "/ai-test" "$(dasterm_t help_ai_test)"
+  dasterm_kv "/config" "$(dasterm_t help_config)"
+  dasterm_kv "/update" "$(dasterm_t help_update)"
+  dasterm_kv "/uninstall" "$(dasterm_t help_uninstall)"
+  dasterm_kv "/version" "$(dasterm_t help_version)"
+  dasterm_footer
+}
+
+dasterm_config_menu() {
+  dasterm_load_all
+  local lang mode theme show prompt slash telemetry uh ans
+  lang="${DASTERM_LANG:-id}"
+  mode="${DASTERM_MODE:-lite}"
+  theme="${DASTERM_THEME:-pastel}"
+  show="${DASTERM_SHOW:-always}"
+  prompt="${DASTERM_PROMPT:-on}"
+  slash="${DASTERM_SLASH:-on}"
+  telemetry="${DASTERM_TELEMETRY:-off}"
+  uh="${DASTERM_USERHOST:-$(whoami)@$(hostname)}"
+  dasterm_title "$(dasterm_t config_title)"
+  echo "1) Indonesia"
+  echo "2) English"
+  read -r -p "Language [${lang}]: " ans
+  case "${ans:-}" in 1) lang="id" ;; 2) lang="en" ;; esac
+  echo "1) Lite"
+  echo "2) Full"
+  read -r -p "Mode [${mode}]: " ans
+  case "${ans:-}" in 1) mode="lite" ;; 2) mode="full" ;; esac
+  echo "1) Pastel"
+  echo "2) Cyber"
+  echo "3) Ocean"
+  echo "4) Mono"
+  read -r -p "Theme [${theme}]: " ans
+  case "${ans:-}" in 1) theme="pastel" ;; 2) theme="cyber" ;; 3) theme="ocean" ;; 4) theme="mono" ;; esac
+  read -r -p "User@Host [${uh}]: " ans
+  [ -n "${ans:-}" ] && uh="$ans"
+  read -r -p "Show dashboard every login? [${show}] always/manual: " ans
+  case "${ans:-}" in always|manual) show="$ans" ;; esac
+  read -r -p "Change prompt? [${prompt}] on/off: " ans
+  case "${ans:-}" in on|off) prompt="$ans" ;; esac
+  read -r -p "Enable slash aliases? [${slash}] on/off: " ans
+  case "${ans:-}" in on|off) slash="$ans" ;; esac
+  read -r -p "Anonymous telemetry? [${telemetry}] on/off: " ans
+  case "${ans:-}" in on|off) telemetry="$ans" ;; esac
+  mkdir -p "$DASTERM_CONFIG_DIR"
+  cat > "$DASTERM_CONFIG" <<EOF
+DASTERM_VERSION="${DASTERM_VERSION:-$DASTERM_VERSION_FALLBACK}"
+DASTERM_LANG="$lang"
+DASTERM_MODE="$mode"
+DASTERM_THEME="$theme"
+DASTERM_USERHOST="$uh"
+DASTERM_SHOW="$show"
+DASTERM_PROMPT="$prompt"
+DASTERM_SLASH="$slash"
+DASTERM_TELEMETRY="$telemetry"
+DASTERM_REPO_OWNER="${DASTERM_REPO_OWNER:-akaanakbaik}"
+DASTERM_REPO_NAME="${DASTERM_REPO_NAME:-dastermv2}"
+DASTERM_REPO_BRANCH="${DASTERM_REPO_BRANCH:-main}"
+EOF
+  chmod 600 "$DASTERM_CONFIG"
+  dasterm_success "$(dasterm_t config_saved)"
+}
+
+dasterm_uninstall_prompt() {
+  dasterm_load_all
+  dasterm_warn "$(dasterm_t uninstall_hint)"
+  read -r -p "Continue? [y/N]: " ans
+  case "${ans:-n}" in
+    [Yy]*)
+      bash <(curl -fsSL "https://raw.githubusercontent.com/${DASTERM_REPO_OWNER:-akaanakbaik}/${DASTERM_REPO_NAME:-dastermv2}/${DASTERM_REPO_BRANCH:-main}/install.sh")
+      ;;
+  esac
+}
+
+dasterm_dispatch() {
+  local cmd="${1:-status}"
+  shift || true
+  case "$cmd" in
+    shell-init) dasterm_shell_init ;;
+    auto)
+      dasterm_load_all
+      [ "${DASTERM_SHOW:-always}" = "manual" ] && exit 0
+      dasterm_render_dashboard "${DASTERM_MODE:-lite}"
+      ;;
+    status|dashboard)
+      dasterm_load_all
+      dasterm_render_dashboard "${DASTERM_MODE:-lite}"
+      ;;
+    lite)
+      dasterm_load_all
+      dasterm_render_dashboard lite
+      ;;
+    full)
+      dasterm_load_all
+      dasterm_render_dashboard full
+      ;;
+    help|-h|--help)
+      dasterm_help
+      ;;
+    speedtest)
+      dasterm_load_all
+      dasterm_speedtest_show
+      ;;
+    respeedtest)
+      dasterm_load_all
+      dasterm_speedtest_run "${1:-}"
+      ;;
+    network)
+      dasterm_load_all
+      dasterm_network_show
+      ;;
+    storage)
+      dasterm_load_all
+      dasterm_storage_show
+      ;;
+    services)
+      dasterm_load_all
+      dasterm_services_show
+      ;;
+    security)
+      dasterm_load_all
+      dasterm_security_show
+      ;;
+    doctor)
+      dasterm_load_all
+      dasterm_doctor_show
+      ;;
+    ai)
+      dasterm_load_all
+      dasterm_ai_ask "$*"
+      ;;
+    brain-ai)
+      dasterm_load_all
+      dasterm_ai_brain_show
+      ;;
+    clear-brain-ai)
+      dasterm_load_all
+      dasterm_ai_brain_clear
+      ;;
+    ai-provider)
+      dasterm_load_all
+      dasterm_ai_provider_show
+      ;;
+    ai-reset-provider)
+      dasterm_load_all
+      dasterm_ai_provider_reset
+      ;;
+    ai-test)
+      dasterm_load_all
+      dasterm_ai_test
+      ;;
+    config)
+      dasterm_config_menu
+      ;;
+    update)
+      dasterm_load_all
+      dasterm_update_run
+      ;;
+    uninstall)
+      dasterm_uninstall_prompt
+      ;;
+    version|--version|-v)
+      dasterm_load_all
+      echo "${DASTERM_VERSION:-$DASTERM_VERSION_FALLBACK}"
+      ;;
+    about)
+      dasterm_load_all
+      dasterm_title "Dasterm v2"
+      dasterm_kv "Author" "aka"
+      dasterm_kv "Repo" "github.com/akaanakbaik/dastermv2"
+      dasterm_kv "Version" "${DASTERM_VERSION:-$DASTERM_VERSION_FALLBACK}"
+      dasterm_footer
+      ;;
+    *)
+      dasterm_load_all
+      dasterm_error "$(dasterm_t unknown_cmd): $cmd"
+      dasterm_help
+      exit 1
+      ;;
+  esac
+}
+
+dasterm_dispatch "$@"
