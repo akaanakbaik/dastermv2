@@ -2,6 +2,25 @@ dasterm_speedtest_file() {
   echo "$DASTERM_CACHE_DIR/speedtest.json"
 }
 
+dasterm_speed_unit_to_bps() {
+  local value="$1"
+  local unit="$2"
+  awk -v v="$value" -v u="$unit" 'BEGIN{
+    unit=tolower(u);
+    gsub(/\/sec/,"/s",unit);
+    if(unit=="bit/s" || unit=="bps") m=1;
+    else if(unit=="kbit/s" || unit=="kbps") m=1000;
+    else if(unit=="mbit/s" || unit=="mbps") m=1000000;
+    else if(unit=="gbit/s" || unit=="gbps") m=1000000000;
+    else if(unit=="tbit/s" || unit=="tbps") m=1000000000000;
+    else if(unit=="kbyte/s" || unit=="kb/s") m=8000;
+    else if(unit=="mbyte/s" || unit=="mb/s") m=8000000;
+    else if(unit=="gbyte/s" || unit=="gb/s") m=8000000000;
+    else m=1000000;
+    printf "%.0f", v*m;
+  }'
+}
+
 dasterm_speed_calc_json() {
   local down_bps="$1"
   local up_bps="$2"
@@ -37,7 +56,7 @@ dasterm_speed_calc_json() {
 
 dasterm_speedtest_ookla() {
   local raw down up ping jitter loss provider region server
-  raw="$(timeout 120 speedtest --accept-license --accept-gdpr --format=json 2>/dev/null || true)"
+  raw="$(timeout 180 speedtest --accept-license --accept-gdpr --format=json 2>/dev/null || true)"
   [ -n "$raw" ] || return 1
   echo "$raw" | jq -e . >/dev/null 2>&1 || return 1
   down="$(echo "$raw" | jq -r '.download.bandwidth // 0' | awk '{printf "%.0f", $1*8}')"
@@ -52,19 +71,54 @@ dasterm_speedtest_ookla() {
   dasterm_speed_calc_json "$down" "$up" "$ping" "$jitter" "$loss" "$provider" "$region" "$server" "ookla-speedtest"
 }
 
-dasterm_speedtest_cli() {
+dasterm_speedtest_cli_json_cmd() {
+  local cmd="$1"
   local raw down up ping provider region server
-  raw="$(timeout 120 speedtest-cli --json 2>/dev/null || true)"
+  raw="$(timeout 180 "$cmd" --json 2>/dev/null || true)"
   [ -n "$raw" ] || return 1
   echo "$raw" | jq -e . >/dev/null 2>&1 || return 1
   down="$(echo "$raw" | jq -r '.download // 0')"
   up="$(echo "$raw" | jq -r '.upload // 0')"
   ping="$(echo "$raw" | jq -r '.ping // 0')"
   provider="$(echo "$raw" | jq -r '.client.isp // empty')"
-  region="$(echo "$raw" | jq -r '.server.country // empty')"
+  region="$(echo "$raw" | jq -r '.server.country // .server.name // empty')"
   server="$(echo "$raw" | jq -r '.server.sponsor // empty')"
   [ "$down" != "0" ] || return 1
-  dasterm_speed_calc_json "$down" "$up" "$ping" "0" "unknown" "$provider" "$region" "$server" "speedtest-cli"
+  dasterm_speed_calc_json "$down" "$up" "$ping" "0" "unknown" "$provider" "$region" "$server" "${cmd}-json"
+}
+
+dasterm_speedtest_text_cmd() {
+  local cmd="$1"
+  local raw down_value down_unit up_value up_unit down up ping provider region server hosted_line
+  raw="$(timeout 180 "$cmd" 2>/dev/null || true)"
+  [ -n "$raw" ] || return 1
+
+  down_value="$(printf "%s\n" "$raw" | awk -F: '/Download:/ {gsub(/^[ \t]+/,"",$2); split($2,a," "); print a[1]; exit}')"
+  down_unit="$(printf "%s\n" "$raw" | awk -F: '/Download:/ {gsub(/^[ \t]+/,"",$2); split($2,a," "); print a[2]; exit}')"
+  up_value="$(printf "%s\n" "$raw" | awk -F: '/Upload:/ {gsub(/^[ \t]+/,"",$2); split($2,a," "); print a[1]; exit}')"
+  up_unit="$(printf "%s\n" "$raw" | awk -F: '/Upload:/ {gsub(/^[ \t]+/,"",$2); split($2,a," "); print a[2]; exit}')"
+
+  [ -n "$down_value" ] || return 1
+  [ -n "$up_value" ] || up_value="0"
+  [ -n "$down_unit" ] || down_unit="Mbit/s"
+  [ -n "$up_unit" ] || up_unit="Mbit/s"
+
+  down="$(dasterm_speed_unit_to_bps "$down_value" "$down_unit")"
+  up="$(dasterm_speed_unit_to_bps "$up_value" "$up_unit")"
+
+  provider="$(printf "%s\n" "$raw" | awk '/^Testing from / {sub(/^Testing from /,""); sub(/ \(.*/,""); print; exit}')"
+  hosted_line="$(printf "%s\n" "$raw" | awk '/^Hosted by / {print; exit}')"
+  server="$(printf "%s\n" "$hosted_line" | awk '{sub(/^Hosted by /,""); sub(/ \(.*/,""); print}')"
+  region="$(printf "%s\n" "$hosted_line" | sed -n 's/.*(\(.*\)) \[.*/\1/p')"
+  ping="$(printf "%s\n" "$hosted_line" | awk -F']:' '{print $2}' | awk '{print $1}')"
+
+  [ -n "$provider" ] || provider=""
+  [ -n "$server" ] || server=""
+  [ -n "$region" ] || region=""
+  [ -n "$ping" ] || ping="0"
+
+  [ "$down" != "0" ] || return 1
+  dasterm_speed_calc_json "$down" "$up" "$ping" "0" "unknown" "$provider" "$region" "$server" "${cmd}-text"
 }
 
 dasterm_speedtest_curl_fallback() {
@@ -87,12 +141,25 @@ dasterm_speedtest_run() {
   [ "$quiet" = "--quiet" ] || dasterm_info "$(dasterm_t speed_running)"
 
   json=""
+
   if dasterm_has speedtest && dasterm_has jq; then
     json="$(dasterm_speedtest_ookla || true)"
   fi
 
   if [ -z "$json" ] && dasterm_has speedtest-cli && dasterm_has jq; then
-    json="$(dasterm_speedtest_cli || true)"
+    json="$(dasterm_speedtest_cli_json_cmd speedtest-cli || true)"
+  fi
+
+  if [ -z "$json" ] && dasterm_has speedtest && dasterm_has jq; then
+    json="$(dasterm_speedtest_cli_json_cmd speedtest || true)"
+  fi
+
+  if [ -z "$json" ] && dasterm_has speedtest; then
+    json="$(dasterm_speedtest_text_cmd speedtest || true)"
+  fi
+
+  if [ -z "$json" ] && dasterm_has speedtest-cli; then
+    json="$(dasterm_speedtest_text_cmd speedtest-cli || true)"
   fi
 
   if [ -z "$json" ] && dasterm_has curl; then
