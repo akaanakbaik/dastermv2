@@ -63,6 +63,11 @@ has() {
   command -v "$1" >/dev/null 2>&1
 }
 
+abort_invalid() {
+  err "Input salah 3 kali. Installer dibatalkan."
+  exit 1
+}
+
 detect_user() {
   TARGET_USER="${SUDO_USER:-${USER:-root}}"
   TARGET_HOME="$(getent passwd "$TARGET_USER" 2>/dev/null | cut -d: -f6 || echo "${HOME:-/root}")"
@@ -132,8 +137,12 @@ run_step() {
   ) &
   local pid=$!
   spinner "$pid" "$text"
-  wait "$pid"
-  ok "$text"
+  if wait "$pid"; then
+    ok "$text"
+  else
+    err "$text failed."
+    exit 1
+  fi
 }
 
 banner() {
@@ -144,19 +153,6 @@ banner() {
   say "║            Interactive Linux Terminal Dashboard              ║"
   say "╚══════════════════════════════════════════════════════════════╝"
   say "${N}"
-}
-
-choose_language() {
-  line
-  say "${B}Choose language / Pilih bahasa${N}"
-  say "1) Indonesia"
-  say "2) English"
-  printf "Select [1/2]: "
-  read -r x
-  case "${x:-1}" in
-    2) DASH_LANG="en" ;;
-    *) DASH_LANG="id" ;;
-  esac
 }
 
 t() {
@@ -196,11 +192,69 @@ t() {
     en:telemetry) echo "Allow anonymous statistics for README badges? Default no." ;;
     id:reload) echo "Muat ulang tampilan sekarang dengan source ~/.bashrc?" ;;
     en:reload) echo "Reload display now with source ~/.bashrc?" ;;
+    id:invalid) echo "Pilihan tidak valid. Coba lagi." ;;
+    en:invalid) echo "Invalid choice. Try again." ;;
     *) echo "$key" ;;
   esac
 }
 
+read_choice() {
+  local prompt="$1"
+  local default="$2"
+  local choices="$3"
+  local ans attempt
+  for attempt in 1 2 3; do
+    read -r -p "$prompt" ans
+    ans="${ans:-$default}"
+    case " $choices " in
+      *" $ans "*) echo "$ans"; return 0 ;;
+      *)
+        warn "$(t invalid) (${attempt}/3)"
+        ;;
+    esac
+  done
+  abort_invalid
+}
+
+ask_yes_no() {
+  local prompt="$1"
+  local default="${2:-n}"
+  local ans attempt
+  for attempt in 1 2 3; do
+    if [ "$default" = "y" ]; then
+      read -r -p "$prompt [Y/n]: " ans
+      ans="${ans:-y}"
+    else
+      read -r -p "$prompt [y/N]: " ans
+      ans="${ans:-n}"
+    fi
+
+    case "$ans" in
+      y|Y|yes|YES|Yes) return 0 ;;
+      n|N|no|NO|No) return 1 ;;
+      *)
+        warn "$(t invalid) (${attempt}/3)"
+        ;;
+    esac
+  done
+  abort_invalid
+}
+
+choose_language() {
+  local x
+  line
+  say "${B}Choose language / Pilih bahasa${N}"
+  say "1) Indonesia"
+  say "2) English"
+  x="$(read_choice "Select [1/2]: " "1" "1 2")"
+  case "$x" in
+    2) DASH_LANG="en" ;;
+    *) DASH_LANG="id" ;;
+  esac
+}
+
 main_menu() {
+  local action
   line
   say "${B}$(t main_menu)${N}"
   say "1) $(t install)"
@@ -208,41 +262,39 @@ main_menu() {
   say "3) $(t uninstall)"
   say "4) $(t repair)"
   say "5) $(t exit)"
-  printf "Select [1/2/3/4/5]: "
-  read -r action
-  case "${action:-1}" in
+  action="$(read_choice "Select [1/2/3/4/5]: " "1" "1 2 3 4 5")"
+  case "$action" in
     1) ACTION="install" ;;
     2) ACTION="reconfigure" ;;
     3) ACTION="uninstall" ;;
     4) ACTION="repair" ;;
     5) exit 0 ;;
-    *) ACTION="install" ;;
   esac
 }
 
 choose_mode() {
+  local x
   line
   say "${B}$(t mode)${N}"
   say "1) $(t mode_lite)"
   say "2) $(t mode_full)"
-  printf "Select [1/2]: "
-  read -r x
-  case "${x:-1}" in
+  x="$(read_choice "Select [1/2]: " "1" "1 2")"
+  case "$x" in
     2) DASH_MODE="full" ;;
     *) DASH_MODE="lite" ;;
   esac
 }
 
 choose_theme() {
+  local x
   line
   say "${B}$(t theme)${N}"
   say "1) Pastel"
   say "2) Cyber"
   say "3) Ocean"
   say "4) Mono"
-  printf "Select [1/2/3/4]: "
-  read -r x
-  case "${x:-1}" in
+  x="$(read_choice "Select [1/2/3/4]: " "1" "1 2 3 4")"
+  case "$x" in
     2) DASH_THEME="cyber" ;;
     3) DASH_THEME="ocean" ;;
     4) DASH_THEME="mono" ;;
@@ -250,43 +302,79 @@ choose_theme() {
   esac
 }
 
-ask_yes_no() {
-  local prompt="$1"
-  local default="${2:-n}"
-  local ans
-  if [ "$default" = "y" ]; then
-    read -r -p "$prompt [Y/n]: " ans
-    case "${ans:-y}" in [Yy]*) return 0 ;; *) return 1 ;; esac
-  else
-    read -r -p "$prompt [y/N]: " ans
-    case "${ans:-n}" in [Yy]*) return 0 ;; *) return 1 ;; esac
+valid_userhost_input() {
+  local value="$1"
+  [ -z "$value" ] && return 0
+  [[ "$value" =~ [[:space:]] ]] && return 1
+  [[ "$value" == *"/"* ]] && return 1
+  [[ "$value" == *":"* ]] && return 1
+  if [[ "$value" == *"@"* ]]; then
+    local left right
+    left="${value%%@*}"
+    right="${value#*@}"
+    [ -n "$left" ] && [ -n "$right" ] || return 1
   fi
+  return 0
 }
 
 ask_userhost() {
   line
   say "${B}$(t userhost)${N}"
-  local default
+  local default uh attempt
   default="${TARGET_USER}@$(hostname 2>/dev/null || echo linux)"
-  read -r -p "User@Host [$default]: " uh
-  if [ -z "${uh:-}" ]; then
-    DASH_USERHOST="$default"
-  elif [[ "$uh" == *"@"* ]]; then
-    DASH_USERHOST="$uh"
-  else
-    DASH_USERHOST="${TARGET_USER}@${uh}"
-  fi
+
+  for attempt in 1 2 3; do
+    read -r -p "User@Host [$default]: " uh
+    if valid_userhost_input "${uh:-}"; then
+      if [ -z "${uh:-}" ]; then
+        DASH_USERHOST="$default"
+      elif [[ "$uh" == *"@"* ]]; then
+        DASH_USERHOST="$uh"
+      else
+        DASH_USERHOST="${TARGET_USER}@${uh}"
+      fi
+      return 0
+    fi
+    warn "User@Host tidak valid. Hindari spasi, '/', ':', atau format @ yang kosong. (${attempt}/3)"
+  done
+
+  abort_invalid
 }
 
 wizard() {
   choose_mode
   ask_userhost
   choose_theme
-  if ask_yes_no "$(t show)" y; then DASH_SHOW="always"; else DASH_SHOW="manual"; fi
-  if ask_yes_no "$(t prompt)" y; then DASH_PROMPT="on"; else DASH_PROMPT="off"; fi
-  if ask_yes_no "$(t alias)" y; then DASH_SLASH="on"; else DASH_SLASH="off"; fi
-  if ask_yes_no "$(t speed)" y; then DASH_SPEED_INIT="on"; else DASH_SPEED_INIT="off"; fi
-  if ask_yes_no "$(t telemetry)" n; then DASH_TELEMETRY="on"; else DASH_TELEMETRY="off"; fi
+
+  if ask_yes_no "$(t show)" y; then
+    DASH_SHOW="always"
+  else
+    DASH_SHOW="manual"
+  fi
+
+  if ask_yes_no "$(t prompt)" y; then
+    DASH_PROMPT="on"
+  else
+    DASH_PROMPT="off"
+  fi
+
+  if ask_yes_no "$(t alias)" y; then
+    DASH_SLASH="on"
+  else
+    DASH_SLASH="off"
+  fi
+
+  if ask_yes_no "$(t speed)" y; then
+    DASH_SPEED_INIT="on"
+  else
+    DASH_SPEED_INIT="off"
+  fi
+
+  if ask_yes_no "$(t telemetry)" n; then
+    DASH_TELEMETRY="on"
+  else
+    DASH_TELEMETRY="off"
+  fi
 }
 
 install_deps() {
@@ -294,25 +382,44 @@ install_deps() {
   mgr="$(detect_pkgmgr)"
   [ "$mgr" = "none" ] && return 0
   net_ok || return 0
+
   case "$mgr" in
     apt-get)
       DEBIAN_FRONTEND=noninteractive apt-get -qq update
       DEBIAN_FRONTEND=noninteractive apt-get -qqy install curl ca-certificates jq coreutils util-linux procps iproute2 gawk sed grep pciutils lsb-release bc >/dev/null
+      if ! has speedtest && ! has speedtest-cli; then
+        DEBIAN_FRONTEND=noninteractive apt-get -qqy install speedtest-cli >/dev/null || true
+      fi
       ;;
     dnf)
       dnf -qy install curl ca-certificates jq coreutils util-linux procps-ng iproute gawk sed grep pciutils redhat-lsb-core bc >/dev/null
+      if ! has speedtest && ! has speedtest-cli; then
+        dnf -qy install speedtest-cli >/dev/null || true
+      fi
       ;;
     yum)
       yum -qy install curl ca-certificates jq coreutils util-linux procps-ng iproute gawk sed grep pciutils redhat-lsb-core bc >/dev/null
+      if ! has speedtest && ! has speedtest-cli; then
+        yum -qy install speedtest-cli >/dev/null || true
+      fi
       ;;
     pacman)
       pacman -Sy --noconfirm --needed curl ca-certificates jq coreutils util-linux procps-ng iproute2 gawk sed grep pciutils lsb-release bc >/dev/null
+      if ! has speedtest && ! has speedtest-cli; then
+        pacman -Sy --noconfirm --needed speedtest-cli >/dev/null || true
+      fi
       ;;
     zypper)
       zypper -nq install curl ca-certificates jq coreutils util-linux procps gawk sed grep pciutils lsb-release bc >/dev/null
+      if ! has speedtest && ! has speedtest-cli; then
+        zypper -nq install speedtest-cli >/dev/null || true
+      fi
       ;;
     apk)
       apk add --no-cache curl ca-certificates jq coreutils util-linux procps iproute2 gawk sed grep pciutils bc >/dev/null
+      if ! has speedtest && ! has speedtest-cli; then
+        apk add --no-cache speedtest-cli >/dev/null || true
+      fi
       ;;
   esac
 }
@@ -321,7 +428,9 @@ download_file() {
   local src="$1"
   local dst="$2"
   local url="${RAW_BASE}/${src}"
+
   info "Downloading ${src}"
+
   if ! curl -fsSL "$url" -o "$dst"; then
     err "Failed to download: $src"
     err "URL: $url"
@@ -333,6 +442,8 @@ download_file() {
 download_sources() {
   mkdir -p "$TMP_DIR/bin" "$TMP_DIR/lib"
   download_file "bin/dasterm" "$TMP_DIR/bin/dasterm"
+
+  local f
   for f in core.sh i18n.sh render.sh system.sh network.sh speedtest.sh ai.sh update.sh storage.sh security.sh services.sh doctor.sh telemetry.sh; do
     download_file "lib/${f}" "$TMP_DIR/lib/${f}"
   done
@@ -340,6 +451,7 @@ download_sources() {
 
 write_config() {
   mkdir -p "$CONFIG_DIR" "$CACHE_DIR" "$LOG_DIR"
+
   cat > "$CONFIG_FILE" <<EOF
 DASTERM_VERSION="$VERSION"
 DASTERM_LANG="${DASH_LANG:-id}"
@@ -354,6 +466,7 @@ DASTERM_REPO_OWNER="$REPO_OWNER"
 DASTERM_REPO_NAME="$REPO_NAME"
 DASTERM_REPO_BRANCH="$REPO_BRANCH"
 EOF
+
   chmod 600 "$CONFIG_FILE"
   chown -R "$TARGET_USER":"$TARGET_GROUP" "$CONFIG_DIR" "$CACHE_DIR" "$DATA_DIR" 2>/dev/null || true
 }
@@ -395,6 +508,7 @@ EOF
 
 install_slash_commands() {
   [ "${DASH_SLASH:-on}" = "on" ] || return 0
+
   local name target
   while IFS=: read -r name target; do
     [ -n "$name" ] || continue
@@ -428,6 +542,8 @@ fi
 ### DASTERM_V2_END ###
 EOF
 )"
+
+  local rc
   for rc in "$BASHRC" "$ZSHRC"; do
     [ -f "$rc" ] || touch "$rc"
     sed -i "/^${MARK_BEGIN}$/,/^${MARK_END}$/d" "$rc" 2>/dev/null || true
@@ -438,6 +554,7 @@ EOF
 
 run_initial_speedtest() {
   [ "${DASH_SPEED_INIT:-off}" = "on" ] || return 0
+
   if [ -x "$BIN_DIR/dasterm" ]; then
     sudo -u "$TARGET_USER" env HOME="$TARGET_HOME" "$BIN_DIR/dasterm" respeedtest --quiet || true
   fi
@@ -451,10 +568,12 @@ send_install_telemetry() {
 
 reload_shell_prompt() {
   line
+
   if ask_yes_no "$(t reload)" y; then
     ok "Reloading shell display..."
     sleep 1
     clear 2>/dev/null || true
+
     if [ "$TARGET_USER" = "root" ]; then
       cd "$TARGET_HOME" || true
       if [ -f "$BASHRC" ]; then
@@ -478,6 +597,7 @@ do_install() {
   detect_user
   [ -n "${DASH_LANG:-}" ] || choose_language
   wizard
+
   run_step "Installing dependencies" install_deps
   run_step "Downloading Dasterm v2 files" download_sources
   run_step "Installing Dasterm command" install_files
@@ -485,13 +605,16 @@ do_install() {
   run_step "Injecting shell integration" inject_shell
   run_step "Installing slash commands" install_slash_commands
   run_step "Preparing initial speedtest cache" run_initial_speedtest
+
   send_install_telemetry
+
   ok "Dasterm v2 installed successfully."
   say ""
   say "${B}Next:${N}"
   say "  source ~/.bashrc"
   say "  dasterm"
   say "  /help"
+
   reload_shell_prompt
 }
 
@@ -500,14 +623,18 @@ do_reconfigure() {
   detect_user
   [ -n "${DASH_LANG:-}" ] || choose_language
   wizard
+
   run_step "Saving new configuration" write_config
   run_step "Refreshing shell integration" inject_shell
+
   if [ "${DASH_SLASH:-on}" = "on" ]; then
     run_step "Refreshing slash commands" install_slash_commands
   else
     run_step "Removing slash commands" remove_slash_commands
   fi
+
   run_step "Refreshing speedtest option" run_initial_speedtest
+
   ok "Dasterm configuration updated."
   reload_shell_prompt
 }
@@ -517,19 +644,24 @@ do_uninstall() {
   detect_user
   line
   warn "This will remove Dasterm files and shell integration."
+
   if ! ask_yes_no "Continue uninstall?" n; then
     exit 0
   fi
+
+  local rc
   for rc in "$BASHRC" "$ZSHRC"; do
     if [ -f "$rc" ]; then
       sed -i "/^${MARK_BEGIN}$/,/^${MARK_END}$/d" "$rc" 2>/dev/null || true
     fi
   done
+
   remove_slash_commands
   rm -f "$BIN_DIR/dasterm"
   rm -rf "$SHARE_DIR"
   rm -rf "$CONFIG_DIR"
   rm -rf "$CACHE_DIR"
+
   ok "Dasterm removed cleanly."
   say ""
   say "Run this if needed:"
@@ -541,18 +673,22 @@ do_repair() {
   detect_user
   load_existing_language
   [ -n "${DASH_LANG:-}" ] || DASH_LANG="id"
+
   if [ -f "$CONFIG_FILE" ]; then
     DASH_SLASH="$(awk -F= '/^DASTERM_SLASH=/{gsub(/"/,"",$2); print $2; exit}' "$CONFIG_FILE" 2>/dev/null || echo on)"
   else
     DASH_SLASH="on"
   fi
+
   run_step "Installing dependencies" install_deps
   run_step "Downloading Dasterm files" download_sources
   run_step "Repairing installed files" install_files
   run_step "Repairing shell integration" inject_shell
+
   if [ "${DASH_SLASH:-on}" = "on" ]; then
     run_step "Repairing slash commands" install_slash_commands
   fi
+
   ok "Dasterm repaired."
   reload_shell_prompt
 }
@@ -587,10 +723,12 @@ main() {
   banner
   detect_user
   load_existing_language
+
   if [ -z "$ACTION" ]; then
     [ -n "${DASH_LANG:-}" ] || choose_language
     main_menu
   fi
+
   case "$ACTION" in
     install) do_install ;;
     reconfigure) do_reconfigure ;;
