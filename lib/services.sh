@@ -73,7 +73,7 @@ dasterm_services_cloudflared_summary() {
 
 dasterm_services_nginx_summary() {
   if dasterm_has nginx; then
-    echo "$(dasterm_services_systemd_unit nginx)"
+    dasterm_services_systemd_unit nginx
   else
     echo "not installed"
   fi
@@ -81,9 +81,9 @@ dasterm_services_nginx_summary() {
 
 dasterm_services_apache_summary() {
   if dasterm_has apache2; then
-    echo "$(dasterm_services_systemd_unit apache2)"
+    dasterm_services_systemd_unit apache2
   elif dasterm_has httpd; then
-    echo "$(dasterm_services_systemd_unit httpd)"
+    dasterm_services_systemd_unit httpd
   else
     echo "not installed"
   fi
@@ -91,7 +91,7 @@ dasterm_services_apache_summary() {
 
 dasterm_services_database_summary() {
   local out=""
-  if dasterm_has psql || dasterm_services_process_count postgres >/dev/null 2>&1; then
+  if dasterm_has psql || [ "$(dasterm_services_process_count postgres)" -gt 0 ]; then
     local s
     s="$(dasterm_services_systemd_unit postgresql)"
     out="${out}PostgreSQL: ${s}; "
@@ -113,7 +113,9 @@ dasterm_services_database_summary() {
 
 dasterm_services_failed_units() {
   if dasterm_has systemctl; then
-    systemctl --failed --no-legend 2>/dev/null | awk '{print $1"("$2")"}' | paste -sd ", " -
+    local failed
+    failed="$(systemctl --failed --no-legend 2>/dev/null | awk '{print $1"("$2")"}' | paste -sd ", " -)"
+    [ -n "$failed" ] && echo "$failed" || echo "none"
   else
     echo "N/A"
   fi
@@ -131,11 +133,13 @@ dasterm_services_show() {
   dasterm_kv "Database" "$(dasterm_services_database_summary)"
   dasterm_kv "Failed Units" "$(dasterm_services_failed_units)"
   echo
+
   dasterm_title "Open Ports"
   local ports
   ports="$(dasterm_services_port_list)"
   [ -n "$ports" ] && echo "$ports" || echo "No listening ports detected"
   echo
+
   dasterm_title "Top Service Processes"
   ps -eo pid,comm,%cpu,%mem --sort=-%mem 2>/dev/null | head -12 || true
   dasterm_footer
