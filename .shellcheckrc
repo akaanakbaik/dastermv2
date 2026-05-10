@@ -1,0 +1,4 @@
+shell=bash
+external-sources=true
+source-path=lib
+disable=SC1090,SC1091
