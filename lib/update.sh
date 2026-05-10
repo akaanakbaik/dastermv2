@@ -50,14 +50,13 @@ dasterm_update_changelog() {
 }
 
 dasterm_update_run() {
-  local current latest tmp
+  local current latest tmp changelog
   current="${DASTERM_VERSION:-2.0.0}"
   latest="$(dasterm_update_latest_version)"
   dasterm_title "$(dasterm_t update_title)"
   dasterm_kv "$(dasterm_t update_current)" "$current"
   dasterm_kv "$(dasterm_t update_latest)" "$latest"
   echo
-  local changelog
   changelog="$(dasterm_update_changelog)"
   if [ -n "$changelog" ]; then
     dasterm_title "Changelog"
@@ -90,6 +89,9 @@ dasterm_update_run() {
   fi
   rm -rf "$tmp"
   dasterm_save_config_value "DASTERM_VERSION" "$latest"
+  if declare -F dasterm_telemetry_send >/dev/null 2>&1; then
+    dasterm_telemetry_send update
+  fi
   dasterm_success "$(dasterm_t update_done)"
   dasterm_info "Run: source ~/.bashrc"
 }
