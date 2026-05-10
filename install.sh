@@ -48,15 +48,15 @@ ok() {
 }
 
 warn() {
-  say "${Y}⚠${N} $*"
+  printf "%b\n" "${Y}⚠${N} $*" >&2
 }
 
 err() {
-  say "${R}✗${N} $*"
+  printf "%b\n" "${R}✗${N} $*" >&2
 }
 
 info() {
-  say "${C}ℹ${N} $*"
+  printf "%b\n" "${C}ℹ${N} $*" >&2
 }
 
 has() {
@@ -190,8 +190,8 @@ t() {
     en:speed) echo "Run initial speedtest and save result?" ;;
     id:telemetry) echo "Izinkan statistik anonim untuk badge README? Default tidak." ;;
     en:telemetry) echo "Allow anonymous statistics for README badges? Default no." ;;
-    id:reload) echo "Muat ulang tampilan sekarang dengan source ~/.bashrc?" ;;
-    en:reload) echo "Reload display now with source ~/.bashrc?" ;;
+    id:reload) echo "Muat ulang tampilan sekarang dan buka shell baru?" ;;
+    en:reload) echo "Reload display now and open a new shell?" ;;
     id:invalid) echo "Pilihan tidak valid. Coba lagi." ;;
     en:invalid) echo "Invalid choice. Try again." ;;
     *) echo "$key" ;;
@@ -576,17 +576,14 @@ reload_shell_prompt() {
 
     if [ "$TARGET_USER" = "root" ]; then
       cd "$TARGET_HOME" || true
-      if [ -f "$BASHRC" ]; then
-        . "$BASHRC" || true
-      fi
-      exec bash -i
+      exec env HOME="$TARGET_HOME" USER="$TARGET_USER" LOGNAME="$TARGET_USER" bash -i
     else
-      exec sudo -u "$TARGET_USER" -H bash -lc 'cd "$HOME" || true; [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc" || true; exec bash -i'
+      exec sudo -u "$TARGET_USER" -H bash -i
     fi
   else
     say ""
     say "${B}Manual reload:${N}"
-    say "  source ~/.bashrc"
+    say "  exec bash -i"
     say "  dasterm"
     say "  /help"
   fi
@@ -611,7 +608,7 @@ do_install() {
   ok "Dasterm v2 installed successfully."
   say ""
   say "${B}Next:${N}"
-  say "  source ~/.bashrc"
+  say "  exec bash -i"
   say "  dasterm"
   say "  /help"
 
@@ -665,7 +662,7 @@ do_uninstall() {
   ok "Dasterm removed cleanly."
   say ""
   say "Run this if needed:"
-  say "  source ~/.bashrc"
+  say "  exec bash -i"
 }
 
 do_repair() {
