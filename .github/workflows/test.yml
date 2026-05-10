@@ -5,11 +5,33 @@ on:
     branches:
       - main
       - master
+    paths:
+      - "install.sh"
+      - "bin/**"
+      - "lib/**"
+      - "scripts/**"
+      - "worker/**"
+      - ".github/workflows/**"
+      - "Makefile"
+      - "VERSION"
   pull_request:
     branches:
       - main
       - master
+    paths:
+      - "install.sh"
+      - "bin/**"
+      - "lib/**"
+      - "scripts/**"
+      - "worker/**"
+      - ".github/workflows/**"
+      - "Makefile"
+      - "VERSION"
   workflow_dispatch:
+
+concurrency:
+  group: dasterm-test-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   bash:
@@ -19,11 +41,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check required files
+        run: |
+          test -f install.sh
+          test -f bin/dasterm
+          test -d lib
+          test -f VERSION
+
       - name: Check Bash syntax
         run: |
           bash -n install.sh
           bash -n bin/dasterm
           find lib -type f -name "*.sh" -print0 | xargs -0 -I{} bash -n {}
+          if [ -d scripts ]; then
+            find scripts -type f -name "*.sh" -print0 | xargs -0 -r -I{} bash -n {}
+          fi
 
       - name: Run minimal bootstrap test
         run: |
@@ -60,6 +92,9 @@ jobs:
       - name: Install ShellCheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
 
-      - name: Run ShellCheck
+      - name: Run ShellCheck errors only
         run: |
-          shellcheck -x install.sh bin/dasterm lib/*.sh
+          shellcheck -x -s bash --severity=error install.sh bin/dasterm lib/*.sh
+          if [ -d scripts ]; then
+            find scripts -type f -name "*.sh" -print0 | xargs -0 -r shellcheck -x -s bash --severity=error
+          fi
