@@ -1,0 +1,65 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  bash:
+    name: Bash Syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Bash syntax
+        run: |
+          bash -n install.sh
+          bash -n bin/dasterm
+          find lib -type f -name "*.sh" -print0 | xargs -0 -I{} bash -n {}
+
+      - name: Run minimal bootstrap test
+        run: |
+          chmod +x bin/dasterm
+          mkdir -p "$HOME/.config/dasterm" "$HOME/.cache/dasterm" "$HOME/.local/share/dasterm/logs"
+          cat > "$HOME/.config/dasterm/config.env" <<'EOF'
+          DASTERM_VERSION="2.0.0"
+          DASTERM_LANG="en"
+          DASTERM_MODE="lite"
+          DASTERM_THEME="mono"
+          DASTERM_USERHOST="ci@github"
+          DASTERM_SHOW="manual"
+          DASTERM_PROMPT="off"
+          DASTERM_SLASH="off"
+          DASTERM_TELEMETRY="off"
+          DASTERM_REPO_OWNER="akaanakbaik"
+          DASTERM_REPO_NAME="dastermv2"
+          DASTERM_REPO_BRANCH="main"
+          EOF
+          sudo mkdir -p /usr/local/share/dasterm/lib
+          sudo cp lib/*.sh /usr/local/share/dasterm/lib/
+          sudo install -m 755 bin/dasterm /usr/local/bin/dasterm
+          dasterm version
+          dasterm help
+          dasterm doctor
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck
+        run: |
+          shellcheck -x install.sh bin/dasterm lib/*.sh
