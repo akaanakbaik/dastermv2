@@ -15,7 +15,7 @@ ls -la /usr/local/bin/dasterm
 If missing, repair:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --repair
 ```
 
 If permission is wrong:
@@ -97,7 +97,7 @@ grep -n "DASTERM_V2_BEGIN" ~/.bashrc ~/.zshrc 2>/dev/null
 If missing, repair:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --repair
 ```
 
 ---
@@ -121,7 +121,7 @@ grep -n "DASTERM_V2_BEGIN" ~/.bashrc ~/.zshrc 2>/dev/null
 Repair:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --repair
 ```
 
 ---
@@ -497,7 +497,7 @@ grep DASTERM_REPO ~/.config/dasterm/config.env
 Repair:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --repair
 ```
 
 ---
@@ -569,7 +569,7 @@ IP max 120 per event per day
 Run:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --uninstall
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --uninstall
 ```
 
 Check leftovers:

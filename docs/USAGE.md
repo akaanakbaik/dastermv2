@@ -9,13 +9,13 @@ Dasterm v2 is an interactive Linux terminal dashboard with Lite/Full mode, cache
 Recommended:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"'
 ```
 
 Direct install:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --install
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --install
 ```
 
 Dasterm needs sudo because it installs files to:
@@ -485,7 +485,7 @@ Use:
 Or:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --reconfigure
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --reconfigure
 ```
 
 ---
@@ -495,7 +495,7 @@ sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/m
 Use repair if files are missing or broken:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --repair
 ```
 
 ---
@@ -511,7 +511,7 @@ Use:
 Or:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --uninstall
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --uninstall
 ```
 
 Uninstall removes only Dasterm files and shell integration.

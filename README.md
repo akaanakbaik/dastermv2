@@ -97,7 +97,7 @@ Safe shell integration
 Recommended install command:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"'
 ```
 
 Dasterm installs files to:
@@ -116,25 +116,25 @@ Because of that, install needs `sudo` or root access.
 Install directly:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --install
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --install
 ```
 
 Reconfigure directly:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --reconfigure
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --reconfigure
 ```
 
 Repair directly:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --repair
 ```
 
 Uninstall directly:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --uninstall
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --uninstall
 ```
 
 ---
@@ -144,7 +144,7 @@ sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/m
 If you run the installer without arguments:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"'
 ```
 
 You will see:
@@ -596,7 +596,7 @@ Use:
 Or direct installer:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --reconfigure
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --reconfigure
 ```
 
 ---
@@ -612,7 +612,7 @@ Use:
 Or direct installer:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --uninstall
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --uninstall
 ```
 
 Uninstall removes:

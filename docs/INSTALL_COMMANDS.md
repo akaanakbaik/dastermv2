@@ -18,7 +18,7 @@ Karena itu, install membutuhkan akses `sudo` atau root.
 Gunakan command ini:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"'
 ```
 
 Lalu pilih:
@@ -34,7 +34,7 @@ Lalu pilih:
 Jika ingin langsung masuk mode install:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --install
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --install
 ```
 
 ---
@@ -44,7 +44,7 @@ sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/m
 Untuk mengatur ulang bahasa, mode, theme, prompt, slash alias, speedtest awal, dan telemetry:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --reconfigure
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --reconfigure
 ```
 
 Atau dari command Dasterm:
@@ -70,7 +70,7 @@ Dasterm tidak bisa berjalan normal
 Command:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --repair
 ```
 
 ---
@@ -80,7 +80,7 @@ sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/m
 Untuk uninstall bersih:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --uninstall
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --uninstall
 ```
 
 Atau:
@@ -168,14 +168,14 @@ Ini normal karena Dasterm perlu menulis ke `/usr/local/bin` dan `/usr/local/shar
 Command paling aman dan direkomendasikan:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"'
 ```
 
 Untuk direct action:
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --install
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --reconfigure
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --repair
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh) --uninstall
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --install
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --reconfigure
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --repair
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --uninstall
 ```
