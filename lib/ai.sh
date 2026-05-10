@@ -80,7 +80,7 @@ dasterm_ai_delay_reset() {
 }
 
 dasterm_ai_memory_init() {
-  local file today
+  local file today old
   file="$(dasterm_ai_memory_file)"
   today="$(dasterm_date)"
   dasterm_mkdirs
@@ -89,7 +89,6 @@ dasterm_ai_memory_init() {
     chmod 600 "$file"
     return
   fi
-  local old
   old="$(jq -r '.date // empty' "$file" 2>/dev/null)"
   if [ "$old" != "$today" ]; then
     jq -n --arg date "$today" '{date:$date,summary:"",items:[]}' > "$file"
@@ -111,10 +110,9 @@ dasterm_ai_memory_context() {
 
 dasterm_ai_brain_show() {
   dasterm_ai_memory_init
-  local file
+  local file summary count
   file="$(dasterm_ai_memory_file)"
   dasterm_title "AI Brain"
-  local summary count
   summary="$(jq -r '.summary // empty' "$file" 2>/dev/null)"
   count="$(jq -r '.items | length' "$file" 2>/dev/null)"
   if [ -z "$summary" ] && [ "${count:-0}" -eq 0 ]; then
@@ -123,11 +121,11 @@ dasterm_ai_brain_show() {
   fi
   dasterm_kv "Date" "$(jq -r '.date // empty' "$file")"
   dasterm_kv "Items" "$count"
-  [ -n "$summary" ] && {
+  if [ -n "$summary" ]; then
     echo
     dasterm_title "Summary"
     echo "$summary"
-  }
+  fi
   echo
   dasterm_title "Recent Items"
   jq -r '(.items // [])[] | "Input : \(.input)\nOutput: \(.output)\n"' "$file" 2>/dev/null
@@ -209,9 +207,11 @@ dasterm_ai_provider_call() {
   local provider="$1"
   local ask="$2"
   local systemprompt="$3"
-  local ask_enc sys_enc url raw
+  local ask_enc sys_enc url raw combined combined_enc
   ask_enc="$(dasterm_urlencode "$ask")"
   sys_enc="$(dasterm_urlencode "$systemprompt")"
+  combined="$(printf "SYSTEM PROMPT:\n%s\n\nUSER REQUEST:\n%s" "$systemprompt" "$ask")"
+  combined_enc="$(dasterm_urlencode "$combined")"
   case "$provider" in
     chocomilk)
       url="https://chocomilk.amira.us.kg/v1/llm/chatgpt/completions?ask=${ask_enc}&systempromt=${sys_enc}"
@@ -220,13 +220,13 @@ dasterm_ai_provider_call() {
       echo "$raw" | jq -r '.data.answer // empty' 2>/dev/null
       ;;
     prexzy_copilot)
-      url="https://apis.prexzyvilla.site/ai/copilot?text=${ask_enc}"
+      url="https://apis.prexzyvilla.site/ai/copilot?text=${combined_enc}"
       raw="$(timeout 10 curl -fsSL -H "Accept: application/json" "$url" 2>/dev/null || true)"
       [ -n "$raw" ] || return 1
       echo "$raw" | jq -r '.response // empty' 2>/dev/null
       ;;
     prexzy_zai)
-      url="https://apis.prexzyvilla.site/ai/zai?text=${ask_enc}"
+      url="https://apis.prexzyvilla.site/ai/zai?text=${combined_enc}"
       raw="$(timeout 10 curl -fsSL -H "Accept: application/json" "$url" 2>/dev/null || true)"
       [ -n "$raw" ] || return 1
       echo "$raw" | jq -r '.response // empty' 2>/dev/null
@@ -375,6 +375,9 @@ dasterm_ai_ask() {
   [ -n "$hasil" ] || hasil="$answer"
   echo "$hasil"
   dasterm_ai_memory_add "$input" "$hasil"
+  if declare -F dasterm_telemetry_send >/dev/null 2>&1; then
+    dasterm_telemetry_send ai
+  fi
   if [ -n "$cmd" ]; then
     echo
     if ! dasterm_ai_command_safe "$cmd"; then
