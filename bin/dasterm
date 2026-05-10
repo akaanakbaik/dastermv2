@@ -165,13 +165,41 @@ EOF
 
 dasterm_uninstall_prompt() {
   dasterm_load_all
+  local url tmp
+  url="https://raw.githubusercontent.com/${DASTERM_REPO_OWNER:-akaanakbaik}/${DASTERM_REPO_NAME:-dastermv2}/${DASTERM_REPO_BRANCH:-main}/install.sh"
+  tmp="${TMPDIR:-/tmp}/dasterm-uninstall-$$.sh"
   dasterm_warn "$(dasterm_t uninstall_hint)"
   read -r -p "Continue? [y/N]: " ans
   case "${ans:-n}" in
     [Yy]*)
-      bash <(curl -fsSL "https://raw.githubusercontent.com/${DASTERM_REPO_OWNER:-akaanakbaik}/${DASTERM_REPO_NAME:-dastermv2}/${DASTERM_REPO_BRANCH:-main}/install.sh")
+      if ! command -v curl >/dev/null 2>&1; then
+        dasterm_error "curl is required."
+        return 1
+      fi
+      curl -fsSL "$url" -o "$tmp"
+      chmod +x "$tmp"
+      if [ "$(id -u)" -ne 0 ]; then
+        if command -v sudo >/dev/null 2>&1; then
+          sudo bash "$tmp" --uninstall
+        else
+          dasterm_error "sudo is required for uninstall."
+          rm -f "$tmp"
+          return 1
+        fi
+      else
+        bash "$tmp" --uninstall
+      fi
+      rm -f "$tmp"
       ;;
   esac
+}
+
+dasterm_telemetry_send_internal() {
+  dasterm_load_all
+  local event="${1:-run}"
+  if declare -F dasterm_telemetry_send >/dev/null 2>&1; then
+    dasterm_telemetry_send "$event"
+  fi
 }
 
 dasterm_dispatch() {
@@ -179,21 +207,28 @@ dasterm_dispatch() {
   shift || true
   case "$cmd" in
     shell-init) dasterm_shell_init ;;
+    telemetry-send)
+      dasterm_telemetry_send_internal "${1:-run}"
+      ;;
     auto)
       dasterm_load_all
       [ "${DASTERM_SHOW:-always}" = "manual" ] && exit 0
+      dasterm_telemetry_send_internal run
       dasterm_render_dashboard "${DASTERM_MODE:-lite}"
       ;;
     status|dashboard)
       dasterm_load_all
+      dasterm_telemetry_send_internal run
       dasterm_render_dashboard "${DASTERM_MODE:-lite}"
       ;;
     lite)
       dasterm_load_all
+      dasterm_telemetry_send_internal run
       dasterm_render_dashboard lite
       ;;
     full)
       dasterm_load_all
+      dasterm_telemetry_send_internal run
       dasterm_render_dashboard full
       ;;
     help|-h|--help)
@@ -206,6 +241,7 @@ dasterm_dispatch() {
     respeedtest)
       dasterm_load_all
       dasterm_speedtest_run "${1:-}"
+      dasterm_telemetry_send_internal respeedtest
       ;;
     network)
       dasterm_load_all
@@ -226,6 +262,7 @@ dasterm_dispatch() {
     doctor)
       dasterm_load_all
       dasterm_doctor_show
+      dasterm_telemetry_send_internal doctor
       ;;
     ai)
       dasterm_load_all
