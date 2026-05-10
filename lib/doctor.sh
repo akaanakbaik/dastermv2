@@ -32,6 +32,7 @@ dasterm_doctor_file() {
 
 dasterm_doctor_shell_block() {
   local found=0
+  local rc
   for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
     if [ -f "$rc" ] && grep -q "DASTERM_V2_BEGIN" "$rc" 2>/dev/null; then
       found=1
@@ -59,8 +60,17 @@ dasterm_doctor_config() {
 }
 
 dasterm_doctor_cache() {
-  [ -d "$DASTERM_CACHE_DIR" ] && dasterm_doctor_check "Cache Directory" ok "$DASTERM_CACHE_DIR" || dasterm_doctor_check "Cache Directory" warn "missing"
-  [ -f "$DASTERM_CACHE_DIR/speedtest.json" ] && dasterm_doctor_check "Speedtest Cache" ok "available" || dasterm_doctor_check "Speedtest Cache" warn "not created yet"
+  if [ -d "$DASTERM_CACHE_DIR" ]; then
+    dasterm_doctor_check "Cache Directory" ok "$DASTERM_CACHE_DIR"
+  else
+    dasterm_doctor_check "Cache Directory" warn "missing"
+  fi
+
+  if [ -f "$DASTERM_CACHE_DIR/speedtest.json" ]; then
+    dasterm_doctor_check "Speedtest Cache" ok "available"
+  else
+    dasterm_doctor_check "Speedtest Cache" warn "not created yet"
+  fi
 }
 
 dasterm_doctor_network() {
@@ -105,11 +115,11 @@ dasterm_doctor_permissions() {
 
 dasterm_doctor_summary_score() {
   local score=100
-  [ -x /usr/local/bin/dasterm ] || score=$((score-25))
-  [ -f "$DASTERM_CONFIG" ] || score=$((score-20))
-  dasterm_has curl || score=$((score-15))
-  dasterm_has jq || score=$((score-10))
-  [ -f "$DASTERM_CACHE_DIR/speedtest.json" ] || score=$((score-5))
+  [ -x /usr/local/bin/dasterm ] || score=$((score - 25))
+  [ -f "$DASTERM_CONFIG" ] || score=$((score - 20))
+  dasterm_has curl || score=$((score - 15))
+  dasterm_has jq || score=$((score - 10))
+  [ -f "$DASTERM_CACHE_DIR/speedtest.json" ] || score=$((score - 5))
   [ "$score" -lt 0 ] && score=0
   if [ "$score" -ge 85 ]; then
     echo "$score/100 GOOD"
@@ -129,6 +139,7 @@ dasterm_doctor_show() {
   dasterm_kv "Mode" "${DASTERM_MODE:-lite}"
   dasterm_kv "Theme" "${DASTERM_THEME:-pastel}"
   echo
+
   dasterm_title "Files"
   dasterm_doctor_file "Binary" "/usr/local/bin/dasterm"
   dasterm_doctor_file "Library" "/usr/local/share/dasterm/lib/core.sh"
@@ -138,16 +149,20 @@ dasterm_doctor_show() {
   dasterm_doctor_cache
   dasterm_doctor_permissions
   echo
+
   dasterm_title "Dependencies"
+  local dep
   for dep in bash curl jq awk sed grep sort head tail df free ps ip ss ping timeout; do
     dasterm_doctor_dep "$dep"
   done
   dasterm_doctor_speed_provider
   dasterm_doctor_ai_provider
   echo
+
   dasterm_title "Connectivity"
   dasterm_doctor_network
   echo
+
   dasterm_title "System Signals"
   dasterm_doctor_check "OS" ok "$(dasterm_os)"
   dasterm_doctor_check "Virtualization" ok "$(dasterm_virt)"
