@@ -6,22 +6,17 @@ REPO_OWNER="akaanakbaik"
 REPO_NAME="dastermv2"
 REPO_BRANCH="${DASTERM_BRANCH:-main}"
 RAW_BASE="https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}"
+INSTALL_URL="${RAW_BASE}/install.sh"
 TMP_DIR="${TMPDIR:-/tmp}/dasterm-install-$$"
 LOCK="${TMPDIR:-/tmp}/dasterm-install.lock"
 PREFIX="/usr/local"
 BIN_DIR="${PREFIX}/bin"
 SHARE_DIR="${PREFIX}/share/dasterm"
 LIB_DIR="${SHARE_DIR}/lib"
-CONFIG_DIR="${HOME}/.config/dasterm"
-CACHE_DIR="${HOME}/.cache/dasterm"
-DATA_DIR="${HOME}/.local/share/dasterm"
-LOG_DIR="${DATA_DIR}/logs"
-CONFIG_FILE="${CONFIG_DIR}/config.env"
-BASHRC="${HOME}/.bashrc"
-ZSHRC="${HOME}/.zshrc"
 MARK_BEGIN="### DASTERM_V2_BEGIN ###"
 MARK_END="### DASTERM_V2_END ###"
 VERSION="2.0.0"
+ACTION=""
 
 G='\033[0;32m'
 R='\033[0;31m'
@@ -64,30 +59,15 @@ info() {
   say "${C}ℹ${N} $*"
 }
 
-pause_enter() {
-  printf "\n"
-  read -r -p "Press Enter to continue..."
-}
-
 has() {
   command -v "$1" >/dev/null 2>&1
 }
 
-need_root() {
-  if [ "$(id -u)" -ne 0 ]; then
-    if has sudo; then
-      sudo "$0" "$@"
-      exit $?
-    fi
-    err "This action needs root access. Run with sudo."
-    exit 1
-  fi
-}
-
 detect_user() {
   TARGET_USER="${SUDO_USER:-${USER:-root}}"
-  TARGET_HOME="$(getent passwd "$TARGET_USER" 2>/dev/null | cut -d: -f6 || echo "$HOME")"
-  [ -n "$TARGET_HOME" ] || TARGET_HOME="$HOME"
+  TARGET_HOME="$(getent passwd "$TARGET_USER" 2>/dev/null | cut -d: -f6 || echo "${HOME:-/root}")"
+  TARGET_GROUP="$(id -gn "$TARGET_USER" 2>/dev/null || echo "$TARGET_USER")"
+  [ -n "$TARGET_HOME" ] || TARGET_HOME="${HOME:-/root}"
   CONFIG_DIR="${TARGET_HOME}/.config/dasterm"
   CACHE_DIR="${TARGET_HOME}/.cache/dasterm"
   DATA_DIR="${TARGET_HOME}/.local/share/dasterm"
@@ -95,6 +75,26 @@ detect_user() {
   CONFIG_FILE="${CONFIG_DIR}/config.env"
   BASHRC="${TARGET_HOME}/.bashrc"
   ZSHRC="${TARGET_HOME}/.zshrc"
+}
+
+load_existing_language() {
+  if [ -f "${CONFIG_FILE:-}" ]; then
+    DASTERM_OLD_LANG="$(awk -F= '/^DASTERM_LANG=/{gsub(/"/,"",$2); print $2; exit}' "$CONFIG_FILE" 2>/dev/null || true)"
+    case "${DASTERM_OLD_LANG:-}" in
+      id|en) DASH_LANG="$DASTERM_OLD_LANG" ;;
+    esac
+  fi
+}
+
+need_root() {
+  if [ "$(id -u)" -ne 0 ]; then
+    err "Root access is required for this action."
+    say ""
+    say "Run:"
+    say "  sudo bash <(curl -fsSL ${INSTALL_URL})"
+    say ""
+    exit 1
+  fi
 }
 
 detect_pkgmgr() {
@@ -117,7 +117,7 @@ spinner() {
   local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
   local i=0
   while kill -0 "$pid" 2>/dev/null; do
-    i=$(( (i + 1) % 10 ))
+    i=$(((i + 1) % 10))
     printf "\r%b %s" "${C}${spin:$i:1}${N}" "$text"
     sleep 0.08
   done
@@ -264,7 +264,8 @@ ask_yes_no() {
 ask_userhost() {
   line
   say "${B}$(t userhost)${N}"
-  local default="${TARGET_USER}@$(hostname 2>/dev/null || echo linux)"
+  local default
+  default="${TARGET_USER}@$(hostname 2>/dev/null || echo linux)"
   read -r -p "User@Host [$default]: " uh
   if [ -z "${uh:-}" ]; then
     DASH_USERHOST="$default"
@@ -276,7 +277,6 @@ ask_userhost() {
 }
 
 wizard() {
-  choose_language
   choose_mode
   ask_userhost
   choose_theme
@@ -325,11 +325,7 @@ download_sources() {
   mkdir -p "$TMP_DIR/bin" "$TMP_DIR/lib"
   download_file "bin/dasterm" "$TMP_DIR/bin/dasterm"
   for f in core.sh i18n.sh render.sh system.sh network.sh speedtest.sh ai.sh update.sh storage.sh security.sh services.sh doctor.sh telemetry.sh; do
-    if curl -fsSL "${RAW_BASE}/lib/${f}" -o "$TMP_DIR/lib/${f}" 2>/dev/null; then
-      :
-    else
-      touch "$TMP_DIR/lib/${f}"
-    fi
+    download_file "lib/${f}" "$TMP_DIR/lib/${f}"
   done
 }
 
@@ -340,7 +336,7 @@ DASTERM_VERSION="$VERSION"
 DASTERM_LANG="${DASH_LANG:-id}"
 DASTERM_MODE="${DASH_MODE:-lite}"
 DASTERM_THEME="${DASH_THEME:-pastel}"
-DASTERM_USERHOST="${DASH_USERHOST:-${TARGET_USER}@$(hostname)}"
+DASTERM_USERHOST="${DASH_USERHOST:-${TARGET_USER}@$(hostname 2>/dev/null || echo linux)}"
 DASTERM_SHOW="${DASH_SHOW:-always}"
 DASTERM_PROMPT="${DASH_PROMPT:-on}"
 DASTERM_SLASH="${DASH_SLASH:-on}"
@@ -350,15 +346,15 @@ DASTERM_REPO_NAME="$REPO_NAME"
 DASTERM_REPO_BRANCH="$REPO_BRANCH"
 EOF
   chmod 600 "$CONFIG_FILE"
-  chown -R "$TARGET_USER":"$TARGET_USER" "$CONFIG_DIR" "$CACHE_DIR" "$DATA_DIR" 2>/dev/null || true
+  chown -R "$TARGET_USER":"$TARGET_GROUP" "$CONFIG_DIR" "$CACHE_DIR" "$DATA_DIR" 2>/dev/null || true
 }
 
 install_files() {
   mkdir -p "$BIN_DIR" "$LIB_DIR"
   install -m 755 "$TMP_DIR/bin/dasterm" "$BIN_DIR/dasterm"
-  cp -f "$TMP_DIR/lib/"*.sh "$LIB_DIR/" 2>/dev/null || true
+  cp -f "$TMP_DIR/lib/"*.sh "$LIB_DIR/"
   chmod 755 "$BIN_DIR/dasterm"
-  chmod 644 "$LIB_DIR/"*.sh 2>/dev/null || true
+  chmod 644 "$LIB_DIR/"*.sh
 }
 
 inject_shell() {
@@ -379,20 +375,27 @@ EOF
     [ -f "$rc" ] || touch "$rc"
     sed -i "/^${MARK_BEGIN}$/,/^${MARK_END}$/d" "$rc" 2>/dev/null || true
     printf "\n%s\n" "$block" >> "$rc"
-    chown "$TARGET_USER":"$TARGET_USER" "$rc" 2>/dev/null || true
+    chown "$TARGET_USER":"$TARGET_GROUP" "$rc" 2>/dev/null || true
   done
 }
 
 run_initial_speedtest() {
   [ "${DASH_SPEED_INIT:-off}" = "on" ] || return 0
   if [ -x "$BIN_DIR/dasterm" ]; then
-    sudo -u "$TARGET_USER" "$BIN_DIR/dasterm" respeedtest --quiet || true
+    sudo -u "$TARGET_USER" env HOME="$TARGET_HOME" "$BIN_DIR/dasterm" respeedtest --quiet || true
+  fi
+}
+
+send_install_telemetry() {
+  if [ -x "$BIN_DIR/dasterm" ]; then
+    sudo -u "$TARGET_USER" env HOME="$TARGET_HOME" "$BIN_DIR/dasterm" telemetry-send install >/dev/null 2>&1 || true
   fi
 }
 
 do_install() {
-  need_root "$@"
+  need_root
   detect_user
+  [ -n "${DASH_LANG:-}" ] || choose_language
   wizard
   run_step "Installing dependencies" install_deps
   run_step "Downloading Dasterm v2 files" download_sources
@@ -400,6 +403,7 @@ do_install() {
   run_step "Saving configuration" write_config
   run_step "Injecting shell integration" inject_shell
   run_step "Preparing initial speedtest cache" run_initial_speedtest
+  send_install_telemetry
   ok "Dasterm v2 installed successfully."
   say ""
   say "${B}Next:${N}"
@@ -409,8 +413,9 @@ do_install() {
 }
 
 do_reconfigure() {
-  need_root "$@"
+  need_root
   detect_user
+  [ -n "${DASH_LANG:-}" ] || choose_language
   wizard
   run_step "Saving new configuration" write_config
   run_step "Refreshing shell integration" inject_shell
@@ -419,7 +424,7 @@ do_reconfigure() {
 }
 
 do_uninstall() {
-  need_root "$@"
+  need_root
   detect_user
   line
   warn "This will remove Dasterm files and shell integration."
@@ -427,7 +432,9 @@ do_uninstall() {
     exit 0
   fi
   for rc in "$BASHRC" "$ZSHRC"; do
-    [ -f "$rc" ] && sed -i "/^${MARK_BEGIN}$/,/^${MARK_END}$/d" "$rc" 2>/dev/null || true
+    if [ -f "$rc" ]; then
+      sed -i "/^${MARK_BEGIN}$/,/^${MARK_END}$/d" "$rc" 2>/dev/null || true
+    fi
   done
   rm -f "$BIN_DIR/dasterm"
   rm -rf "$SHARE_DIR"
@@ -437,8 +444,10 @@ do_uninstall() {
 }
 
 do_repair() {
-  need_root "$@"
+  need_root
   detect_user
+  load_existing_language
+  [ -n "${DASH_LANG:-}" ] || DASH_LANG="id"
   run_step "Installing dependencies" install_deps
   run_step "Downloading Dasterm files" download_sources
   run_step "Repairing installed files" install_files
@@ -446,16 +455,46 @@ do_repair() {
   ok "Dasterm repaired."
 }
 
+usage() {
+  cat <<EOF
+Dasterm installer
+
+Usage:
+  sudo bash install.sh
+  sudo bash install.sh --install
+  sudo bash install.sh --reconfigure
+  sudo bash install.sh --uninstall
+  sudo bash install.sh --repair
+EOF
+}
+
+parse_args() {
+  case "${1:-}" in
+    --install|install) ACTION="install" ;;
+    --reconfigure|reconfigure) ACTION="reconfigure" ;;
+    --uninstall|uninstall) ACTION="uninstall" ;;
+    --repair|repair) ACTION="repair" ;;
+    --help|-h|help) usage; exit 0 ;;
+    "") ;;
+    *) err "Unknown argument: $1"; usage; exit 1 ;;
+  esac
+}
+
 main() {
+  parse_args "${1:-}"
   banner
   detect_user
-  choose_language
-  main_menu
+  load_existing_language
+  if [ -z "$ACTION" ]; then
+    [ -n "${DASH_LANG:-}" ] || choose_language
+    main_menu
+  fi
   case "$ACTION" in
-    install) do_install "$@" ;;
-    reconfigure) do_reconfigure "$@" ;;
-    uninstall) do_uninstall "$@" ;;
-    repair) do_repair "$@" ;;
+    install) do_install ;;
+    reconfigure) do_reconfigure ;;
+    uninstall) do_uninstall ;;
+    repair) do_repair ;;
+    *) exit 0 ;;
   esac
 }
 
