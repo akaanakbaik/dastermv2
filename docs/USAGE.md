@@ -15,7 +15,7 @@ bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com
 Direct install:
 
 ```bash
-bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --install
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --install'
 ```
 
 Dasterm needs sudo because it installs files to:
@@ -485,7 +485,7 @@ Use:
 Or:
 
 ```bash
-bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --reconfigure
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --reconfigure'
 ```
 
 ---
@@ -495,7 +495,7 @@ bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com
 Use repair if files are missing or broken:
 
 ```bash
-bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --repair
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --repair'
 ```
 
 ---
@@ -511,7 +511,7 @@ Use:
 Or:
 
 ```bash
-bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"' --uninstall
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --uninstall'
 ```
 
 Uninstall removes only Dasterm files and shell integration.

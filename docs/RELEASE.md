@@ -459,7 +459,7 @@ Initial v2 release.
 ### Install
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"'
 ```
 ```
 
@@ -470,7 +470,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/i
 Setelah push ke GitHub, test one-liner dari raw:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh)
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"'
 ```
 
 Pastikan file bisa didownload.
