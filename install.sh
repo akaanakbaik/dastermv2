@@ -90,8 +90,8 @@ need_root() {
   if [ "$(id -u)" -ne 0 ]; then
     err "Root access is required for this action."
     say ""
-    say "Run:"
-    say "  sudo bash <(curl -fsSL ${INSTALL_URL})"
+    say "Recommended:"
+    say "  curl -fsSL ${INSTALL_URL} -o /tmp/dasterm-install.sh && sudo bash /tmp/dasterm-install.sh"
     say ""
     exit 1
   fi
@@ -194,6 +194,8 @@ t() {
     en:speed) echo "Run initial speedtest and save result?" ;;
     id:telemetry) echo "Izinkan statistik anonim untuk badge README? Default tidak." ;;
     en:telemetry) echo "Allow anonymous statistics for README badges? Default no." ;;
+    id:reload) echo "Muat ulang tampilan sekarang dengan source ~/.bashrc?" ;;
+    en:reload) echo "Reload display now with source ~/.bashrc?" ;;
     *) echo "$key" ;;
   esac
 }
@@ -318,7 +320,14 @@ install_deps() {
 download_file() {
   local src="$1"
   local dst="$2"
-  curl -fsSL "${RAW_BASE}/${src}" -o "$dst"
+  local url="${RAW_BASE}/${src}"
+  info "Downloading ${src}"
+  if ! curl -fsSL "$url" -o "$dst"; then
+    err "Failed to download: $src"
+    err "URL: $url"
+    err "Pastikan file ini ada di repo, path benar, branch benar, dan repo public."
+    exit 1
+  fi
 }
 
 download_sources() {
@@ -357,6 +366,54 @@ install_files() {
   chmod 644 "$LIB_DIR/"*.sh
 }
 
+slash_command_names() {
+  cat <<'EOF'
+help:help
+status:status
+lite:lite
+full:full
+speedtest:speedtest
+respeedtest:respeedtest
+network:network
+storage:storage
+services:services
+security:security
+doctor:doctor
+ai:ai
+brain-ai:brain-ai
+clear-brain-ai:clear-brain-ai
+ai-provider:ai-provider
+ai-reset-provider:ai-reset-provider
+ai-test:ai-test
+config:config
+update:update
+uninstall:uninstall
+version:version
+about:about
+EOF
+}
+
+install_slash_commands() {
+  [ "${DASH_SLASH:-on}" = "on" ] || return 0
+  local name target
+  while IFS=: read -r name target; do
+    [ -n "$name" ] || continue
+    cat > "/$name" <<SCRIPT
+#!/usr/bin/env bash
+exec /usr/local/bin/dasterm "$target" "\$@"
+SCRIPT
+    chmod 755 "/$name"
+  done < <(slash_command_names)
+}
+
+remove_slash_commands() {
+  local name target
+  while IFS=: read -r name target; do
+    [ -n "$name" ] || continue
+    rm -f "/$name"
+  done < <(slash_command_names)
+}
+
 inject_shell() {
   local block
   block="$(cat <<'EOF'
@@ -392,6 +449,30 @@ send_install_telemetry() {
   fi
 }
 
+reload_shell_prompt() {
+  line
+  if ask_yes_no "$(t reload)" y; then
+    ok "Reloading shell display..."
+    sleep 1
+    clear 2>/dev/null || true
+    if [ "$TARGET_USER" = "root" ]; then
+      cd "$TARGET_HOME" || true
+      if [ -f "$BASHRC" ]; then
+        . "$BASHRC" || true
+      fi
+      exec bash -i
+    else
+      exec sudo -u "$TARGET_USER" -H bash -lc 'cd "$HOME" || true; [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc" || true; exec bash -i'
+    fi
+  else
+    say ""
+    say "${B}Manual reload:${N}"
+    say "  source ~/.bashrc"
+    say "  dasterm"
+    say "  /help"
+  fi
+}
+
 do_install() {
   need_root
   detect_user
@@ -402,6 +483,7 @@ do_install() {
   run_step "Installing Dasterm command" install_files
   run_step "Saving configuration" write_config
   run_step "Injecting shell integration" inject_shell
+  run_step "Installing slash commands" install_slash_commands
   run_step "Preparing initial speedtest cache" run_initial_speedtest
   send_install_telemetry
   ok "Dasterm v2 installed successfully."
@@ -410,6 +492,7 @@ do_install() {
   say "  source ~/.bashrc"
   say "  dasterm"
   say "  /help"
+  reload_shell_prompt
 }
 
 do_reconfigure() {
@@ -419,8 +502,14 @@ do_reconfigure() {
   wizard
   run_step "Saving new configuration" write_config
   run_step "Refreshing shell integration" inject_shell
+  if [ "${DASH_SLASH:-on}" = "on" ]; then
+    run_step "Refreshing slash commands" install_slash_commands
+  else
+    run_step "Removing slash commands" remove_slash_commands
+  fi
   run_step "Refreshing speedtest option" run_initial_speedtest
   ok "Dasterm configuration updated."
+  reload_shell_prompt
 }
 
 do_uninstall() {
@@ -436,11 +525,15 @@ do_uninstall() {
       sed -i "/^${MARK_BEGIN}$/,/^${MARK_END}$/d" "$rc" 2>/dev/null || true
     fi
   done
+  remove_slash_commands
   rm -f "$BIN_DIR/dasterm"
   rm -rf "$SHARE_DIR"
   rm -rf "$CONFIG_DIR"
   rm -rf "$CACHE_DIR"
   ok "Dasterm removed cleanly."
+  say ""
+  say "Run this if needed:"
+  say "  source ~/.bashrc"
 }
 
 do_repair() {
@@ -448,11 +541,20 @@ do_repair() {
   detect_user
   load_existing_language
   [ -n "${DASH_LANG:-}" ] || DASH_LANG="id"
+  if [ -f "$CONFIG_FILE" ]; then
+    DASH_SLASH="$(awk -F= '/^DASTERM_SLASH=/{gsub(/"/,"",$2); print $2; exit}' "$CONFIG_FILE" 2>/dev/null || echo on)"
+  else
+    DASH_SLASH="on"
+  fi
   run_step "Installing dependencies" install_deps
   run_step "Downloading Dasterm files" download_sources
   run_step "Repairing installed files" install_files
   run_step "Repairing shell integration" inject_shell
+  if [ "${DASH_SLASH:-on}" = "on" ]; then
+    run_step "Repairing slash commands" install_slash_commands
+  fi
   ok "Dasterm repaired."
+  reload_shell_prompt
 }
 
 usage() {
