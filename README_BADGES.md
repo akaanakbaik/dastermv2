@@ -6,7 +6,7 @@ Dokumen ini berisi daftar badge yang bisa dipakai di README Dasterm.
 
 ## 1. Badge Static Saat Awal
 
-Badge static bisa langsung dipakai tanpa backend.
+Badge static bisaa langsung dipakai tanpa backend.
 
 ```md
 <p align="center">
