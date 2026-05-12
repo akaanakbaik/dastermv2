@@ -84,6 +84,21 @@ jobs:
               json.dumps(summary, indent=2)
           )
 
+          top_os_1 = os_counter.most_common(1)
+          top_os_2 = os_counter.most_common(2)
+
+          top_country = country_counter.most_common(1)
+
+          os1 = top_os_1[0][0] if top_os_1 else "Unknown"
+          os2 = top_os_2[1][0] if len(top_os_2) > 1 else "Unknown"
+
+          country1 = top_country[0][0] if top_country else "Unknown"
+
+          unique_machines = len(set([
+              line for line in queue.read_text().splitlines()
+              if line.strip()
+          ])) if queue.exists() else 0
+
           badges = {
               "install": {
                   "schemaVersion": 1,
@@ -102,6 +117,30 @@ jobs:
                   "label": "ai",
                   "message": str(ai),
                   "color": "purple"
+              },
+              "top-os-1": {
+                  "schemaVersion": 1,
+                  "label": "top os #1",
+                  "message": os1,
+                  "color": "orange"
+              },
+              "top-os-2": {
+                  "schemaVersion": 1,
+                  "label": "top os #2",
+                  "message": os2,
+                  "color": "yellow"
+              },
+              "country": {
+                  "schemaVersion": 1,
+                  "label": "top country",
+                  "message": country1,
+                  "color": "red"
+              },
+              "machines": {
+                  "schemaVersion": 1,
+                  "label": "unique machines",
+                  "message": str(unique_machines),
+                  "color": "teal"
               }
           }
 
