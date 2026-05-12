@@ -1,6 +1,6 @@
 # Dasterm v2
 
-> Interactive Linux terminal dashboard with cached speedtest, AI assistant, smart command menu, bilingual interface, system health, storage insight, security checks, self-update, and VPS-friendly diagnostics.
+> Interactive Linux terminal dashboard with cached speedtest, AI assistant, smart command menu, bilingual interface, system health, storage insight, security checks, self-update, GitHub-powered telemetry badges, and VPS-friendly diagnostics.
 
 <p align="center">
   <img src="https://img.shields.io/badge/Dasterm-v2.0.0-7c3aed?style=for-the-badge" />
@@ -11,15 +11,23 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Total%20Installs-coming%20soon-111827?style=flat-square" />
-  <img src="https://img.shields.io/badge/Total%20Runs-coming%20soon-111827?style=flat-square" />
-  <img src="https://img.shields.io/badge/Top%20OS%20%231-coming%20soon-111827?style=flat-square" />
-  <img src="https://img.shields.io/badge/Top%20OS%20%232-coming%20soon-111827?style=flat-square" />
+  <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/install.json" />
+  </a>
+  <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/run.json" />
+  </a>
+  <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/ai.json" />
+  </a>
 </p>
 
 <p align="center">
   <a href="https://github.com/akaanakbaik/dastermv2/actions/workflows/test.yml">
     <img src="https://github.com/akaanakbaik/dastermv2/actions/workflows/test.yml/badge.svg" />
+  </a>
+  <a href="https://github.com/akaanakbaik/dastermv2/actions/workflows/telemetry-aggregate.yml">
+    <img src="https://github.com/akaanakbaik/dastermv2/actions/workflows/telemetry-aggregate.yml/badge.svg" />
   </a>
   <img src="https://img.shields.io/github/last-commit/akaanakbaik/dastermv2?style=flat-square" />
   <img src="https://img.shields.io/github/repo-size/akaanakbaik/dastermv2?style=flat-square" />
