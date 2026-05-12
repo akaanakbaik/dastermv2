@@ -3,14 +3,6 @@
 > Interactive Linux terminal dashboard with cached speedtest, AI assistant, smart command menu, bilingual interface, system health, storage insight, security checks, self-update, GitHub-powered telemetry badges, and VPS-friendly diagnostics.
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Dasterm-v2.0.0-7c3aed?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Linux-supported-22c55e?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Shell-Bash%20%7C%20Zsh-0ea5e9?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Language-ID%20%7C%20EN-f97316?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/License-MIT-eab308?style=for-the-badge" />
-</p>
-
-<p align="center">
   <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
     <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/install.json" />
   </a>
@@ -20,19 +12,15 @@
   <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
     <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/ai.json" />
   </a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/akaanakbaik/dastermv2/actions/workflows/test.yml">
-    <img src="https://github.com/akaanakbaik/dastermv2/actions/workflows/test.yml/badge.svg" />
+  <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/top-os-1.json" />
   </a>
-  <a href="https://github.com/akaanakbaik/dastermv2/actions/workflows/telemetry-aggregate.yml">
-    <img src="https://github.com/akaanakbaik/dastermv2/actions/workflows/telemetry-aggregate.yml/badge.svg" />
+  <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/top-os-2.json" />
   </a>
-  <img src="https://img.shields.io/github/last-commit/akaanakbaik/dastermv2?style=flat-square" />
-  <img src="https://img.shields.io/github/repo-size/akaanakbaik/dastermv2?style=flat-square" />
-  <img src="https://img.shields.io/github/issues/akaanakbaik/dastermv2?style=flat-square" />
-  <img src="https://img.shields.io/github/stars/akaanakbaik/dastermv2?style=flat-square" />
+  <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/machines.json" />
+  </a>
 </p>
 
 ---
