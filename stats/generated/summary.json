@@ -1,9 +1,36 @@
 {
-  "installs": 0,
-  "runs": 0,
-  "ai": 0,
-  "top_os": [],
-  "top_virt": [],
-  "top_country": [],
-  "updated_at": null
+  "installs": 1,
+  "runs": 2,
+  "ai": 1,
+  "top_os": [
+    [
+      "Ubuntu",
+      3
+    ],
+    [
+      "Debian",
+      1
+    ]
+  ],
+  "top_virt": [
+    [
+      "KVM",
+      3
+    ],
+    [
+      "LXC",
+      1
+    ]
+  ],
+  "top_country": [
+    [
+      "ID",
+      3
+    ],
+    [
+      "SG",
+      1
+    ]
+  ],
+  "updated_at": "2026-05-12T10:01:04.388897+00:00"
 }
