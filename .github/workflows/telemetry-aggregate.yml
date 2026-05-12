@@ -1,0 +1,130 @@
+name: Dasterm Telemetry Aggregate
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dasterm-telemetry
+  cancel-in-progress: false
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Aggregate telemetry
+        run: |
+          python3 <<'PY'
+          import json
+          from pathlib import Path
+          from collections import Counter
+          from datetime import datetime, timezone
+
+          queue = Path("stats/queue/events.ndjson")
+
+          installs = 0
+          runs = 0
+          ai = 0
+
+          os_counter = Counter()
+          virt_counter = Counter()
+          country_counter = Counter()
+
+          if queue.exists():
+              for line in queue.read_text().splitlines():
+                  line = line.strip()
+
+                  if not line:
+                      continue
+
+                  try:
+                      data = json.loads(line)
+                  except:
+                      continue
+
+                  event = data.get("event")
+
+                  if event == "install":
+                      installs += 1
+                  elif event == "run":
+                      runs += 1
+                  elif event == "ai":
+                      ai += 1
+
+                  os_counter[data.get("os", "Unknown")] += 1
+                  virt_counter[data.get("virt", "Unknown")] += 1
+                  country_counter[data.get("country", "Unknown")] += 1
+
+          summary = {
+              "installs": installs,
+              "runs": runs,
+              "ai": ai,
+              "top_os": os_counter.most_common(5),
+              "top_virt": virt_counter.most_common(5),
+              "top_country": country_counter.most_common(5),
+              "updated_at": datetime.now(timezone.utc).isoformat()
+          }
+
+          Path("stats/generated").mkdir(parents=True, exist_ok=True)
+
+          Path("stats/generated/summary.json").write_text(
+              json.dumps(summary, indent=2)
+          )
+
+          badges = {
+              "install": {
+                  "schemaVersion": 1,
+                  "label": "installs",
+                  "message": str(installs),
+                  "color": "blue"
+              },
+              "run": {
+                  "schemaVersion": 1,
+                  "label": "runs",
+                  "message": str(runs),
+                  "color": "green"
+              },
+              "ai": {
+                  "schemaVersion": 1,
+                  "label": "ai",
+                  "message": str(ai),
+                  "color": "purple"
+              }
+          }
+
+          badge_dir = Path("stats/badges")
+          badge_dir.mkdir(parents=True, exist_ok=True)
+
+          for name, payload in badges.items():
+              (badge_dir / f"{name}.json").write_text(
+                  json.dumps(payload, indent=2)
+              )
+
+          print("Telemetry aggregation complete.")
+          PY
+
+      - name: Commit stats
+        run: |
+          git config user.name "dasterm-bot"
+          git config user.email "actions@github.com"
+
+          git add stats/
+
+          git diff --cached --quiet && exit 0
+
+          git commit -m "chore: update telemetry stats"
+
+          git push

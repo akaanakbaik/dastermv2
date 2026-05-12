@@ -1,0 +1,4 @@
+{"event":"install","os":"Ubuntu","virt":"KVM","country":"ID"}
+{"event":"run","os":"Ubuntu","virt":"KVM","country":"ID"}
+{"event":"run","os":"Debian","virt":"LXC","country":"SG"}
+{"event":"ai","os":"Ubuntu","virt":"KVM","country":"ID"}
