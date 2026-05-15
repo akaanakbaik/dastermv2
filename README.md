@@ -1,149 +1,122 @@
+<div align="center">
+
 # Dasterm v2
 
-> Interactive Linux terminal dashboard with cached speedtest, AI assistant, smart command menu, bilingual interface, system health, storage insight, security checks, self-update, GitHub-powered telemetry badges, and VPS-friendly diagnostics.
+### A smart, beautiful, and VPS-friendly Linux terminal dashboard.
 
-<p align="center">
-  <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/install.json" />
-  </a>
-  <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/run.json" />
-  </a>
-  <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/ai.json" />
-  </a>
-  <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/top-os-1.json" />
-  </a>
-  <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/top-os-2.json" />
-  </a>
-  <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/machines.json" />
-  </a>
-</p>
+Dasterm v2 turns a normal Linux terminal login into a clean interactive dashboard with system insight, cached speedtest, slash commands, AI assistance, storage diagnostics, security checks, service monitoring, self-update, and optional public telemetry badges.
 
----
+<br />
 
-## What is Dasterm?
+<a href="https://github.com/akaanakbaik/dastermv2">
+  <img src="https://img.shields.io/badge/project-Dasterm%20v2-111827?style=for-the-badge" alt="Project" />
+</a>
+<a href="https://github.com/akaanakbaik/dastermv2/blob/main/LICENSE">
+  <img src="https://img.shields.io/badge/license-MIT-16a34a?style=for-the-badge" alt="License" />
+</a>
+<a href="https://github.com/akaanakbaik/dastermv2">
+  <img src="https://img.shields.io/badge/platform-Linux-2563eb?style=for-the-badge" alt="Platform" />
+</a>
+<a href="https://github.com/akaanakbaik/dastermv2">
+  <img src="https://img.shields.io/badge/shell-Bash-f59e0b?style=for-the-badge" alt="Shell" />
+</a>
 
-Dasterm is a modern terminal dashboard for Linux servers and VPS environments.
+<br />
+<br />
 
-It gives you a clean terminal overview when you log in and provides useful commands such as:
+<a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
+  <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/install.json" alt="Total installs" />
+</a>
+<a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
+  <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/run.json" alt="Total runs" />
+</a>
+<a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
+  <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/ai.json" alt="AI usage" />
+</a>
+<a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
+  <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/top-os-1.json" alt="Top OS 1" />
+</a>
+<a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
+  <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/top-os-2.json" alt="Top OS 2" />
+</a>
+<a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
+  <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/machines.json" alt="Unique machines" />
+</a>
 
-```text
-/help
-/status
-/lite
-/full
-/speedtest
-/respeedtest
-/network
-/storage
-/services
-/security
-/doctor
-/ai
-/update
-/uninstall
-```
+<br />
+<br />
 
-Dasterm v2 is designed for:
+[Install](#installation) · [Commands](#commands) · [AI Assistant](#ai-assistant) · [Speedtest](#speedtest-system) · [Security](#security-check) · [Telemetry](#optional-anonymous-telemetry)
 
-```text
-VPS owners
-Linux learners
-Developers
-Server admins
-Pterodactyl users
-Docker users
-Cloudflare Tunnel users
-People who want a useful and beautiful terminal dashboard
-```
+</div>
 
 ---
 
-## Highlights
+## Overview
 
-```text
-Lite and Full dashboard modes
-Indonesian and English interface
-Interactive installer
-Clean install, update, repair, reconfigure, and uninstall flow
-Cached speedtest result
-Accurate Mbps, MB/s, Gbps, and GB/s conversion
-Provider, region, server, ping, jitter, and packet loss when available
-AI assistant with structured metadata output
-AI command approval before execution
-AI memory reset daily by WIB date
-AI provider fallback and auto-rotation
-Storage analyzer for / and /datas
-Docker, PM2, Nginx, Apache, Cloudflared, SSH, database, and port monitor
-Security checker for firewall, SSH, fail2ban, failed login signal
-Doctor command for dependency and install health
-Optional anonymous telemetry foundation for future README badges
-Self-update with /update
-Safe shell integration
-```
+Dasterm v2 is an interactive terminal dashboard for Linux servers, VPS, containers, and daily development environments. It is designed to make server monitoring easier without opening a separate web panel.
+
+When you open a terminal, Dasterm can show a clean dashboard containing system status, speedtest cache, storage usage, running services, network information, security hints, and quick slash commands.
+
+It is especially useful for:
+
+- VPS owners who want a beautiful login dashboard
+- Linux learners who want readable server information
+- Developers who manage Node.js, Docker, PM2, Nginx, Apache, Cloudflared, or databases
+- Pterodactyl users who often debug services, ports, storage, and network issues
+- Server admins who want quick diagnostics without remembering many commands
+
+---
+
+## Features
+
+| Area | What Dasterm v2 does |
+| --- | --- |
+| Dashboard | Lite and Full terminal dashboard modes |
+| Language | Indonesian and English interface |
+| Installer | Install, update, repair, reconfigure, and uninstall from one installer |
+| Speedtest | Cached speedtest with Mbps, MB/s, Gbps, and GB/s conversion |
+| AI | AI assistant with safe command approval before execution |
+| AI Memory | Daily memory cache based on WIB date with manual reset support |
+| Provider Fallback | AI provider fallback, timeout handling, and auto-rotation |
+| Storage | Root disk, `/datas`, mounts, Docker root, inode usage, and largest folders |
+| Services | Docker, PM2, Nginx, Apache, Cloudflared, SSH, Cron, databases, ports |
+| Security | Firewall, SSH, fail2ban, failed login signal, sudo users, login history |
+| Doctor | Dependency, config, cache, shell integration, network, and system health check |
+| Update | Self-update flow that keeps existing configuration |
+| Telemetry | Optional anonymous statistics for public README badges |
 
 ---
 
 ## Installation
 
-Recommended install command:
+Run this command on your Linux server:
 
 ```bash
 bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"'
 ```
 
-Dasterm installs files to:
+Dasterm installs to:
 
 ```text
 /usr/local/bin/dasterm
 /usr/local/share/dasterm/
 ```
 
-Because of that, install needs `sudo` or root access.
+Root or `sudo` access is required because Dasterm installs a global executable and shared runtime files.
 
 ---
 
 ## Direct Installer Actions
 
-Install directly:
+| Action | Command |
+| --- | --- |
+| Install or update | `bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --install'` |
+| Reconfigure | `bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --reconfigure'` |
+| Repair | `bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --repair'` |
+| Uninstall | `bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --uninstall'` |
 
-```bash
-bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --install'
-```
-
-Reconfigure directly:
-
-```bash
-bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --reconfigure'
-```
-
-Repair directly:
-
-```bash
-bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --repair'
-```
-
-Uninstall directly:
-
-```bash
-bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --uninstall'
-```
-
----
-
-## Installer Menu
-
-If you run the installer without arguments:
-
-```bash
-bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f"'
-```
-
-You will see:
+When the installer is started without arguments, it opens an interactive menu:
 
 ```text
 1) Install / Update
@@ -157,52 +130,32 @@ You will see:
 
 ## Interactive Setup
 
-During setup, Dasterm asks:
+During setup, Dasterm can ask for:
 
-```text
-Choose language / Pilih bahasa
-1) Indonesia
-2) English
+- Interface language: Indonesian or English
+- Dashboard mode: Lite or Full
+- Custom `User@Host` display
+- Color theme: Pastel, Cyber, Ocean, or Mono
+- Dashboard display on every login
+- Slash command aliases such as `/help`, `/ai`, and `/update`
+- Initial speedtest cache generation
+- Optional anonymous statistics for README badges
 
-Choose dashboard mode
-1) Lite - fast, compact, small logo
-2) Full - complete, best logo, detailed data
-
-Custom User@Host
-User@Host [root@ubuntu]:
-
-Choose color theme
-1) Pastel
-2) Cyber
-3) Ocean
-4) Mono
-
-Show dashboard on every login? [Y/n]
-Change terminal prompt to custom User@Host? [Y/n]
-Enable slash commands like /help, /ai, /update? [Y/n]
-Run initial speedtest and save result? [Y/n]
-Allow anonymous statistics for README badges? [y/N]
-```
-
-All preferences are saved to:
+Configuration is saved in:
 
 ```text
 ~/.config/dasterm/config.env
 ```
 
----
-
-## After Install
-
-Reload your shell:
+After installation, reload your shell:
 
 ```bash
 source ~/.bashrc
 ```
 
-Or open a new terminal.
+Or open a new terminal session.
 
-Test Dasterm:
+Test the installation:
 
 ```bash
 dasterm version
@@ -210,44 +163,24 @@ dasterm help
 dasterm doctor
 ```
 
-If slash aliases are enabled:
-
-```bash
-/help
-/status
-/doctor
-```
-
 ---
 
 ## Dashboard Modes
 
-Dasterm v2 has only two dashboard modes:
-
-```text
-Lite
-Full
-```
-
 ### Lite Mode
 
-Lite mode is fast and compact.
+Lite mode is fast, compact, and ideal for low-resource VPS environments.
 
 It shows:
 
-```text
-User@Host
-OS
-Kernel
-Uptime
-Health score
-RAM usage
-Root disk usage
-Private IP
-Load average
-Saved speedtest summary
-Small Dasterm logo
-```
+- User and host display
+- OS, kernel, and uptime
+- Health score
+- RAM and root disk usage
+- Private IP
+- Load average
+- Saved speedtest summary
+- Small Dasterm logo
 
 Run:
 
@@ -263,31 +196,20 @@ dasterm lite
 
 ### Full Mode
 
-Full mode is more detailed.
+Full mode is detailed and suitable for deeper system inspection.
 
 It shows:
 
-```text
-Native distro logo through Fastfetch or Neofetch when available
-Full system information
-CPU model, cores, and flags
-RAM and swap
-Root disk and /datas disk if detected
-GPU
-Process count
-Logged-in users
-Private IP
-Public IP cache
-Gateway
-DNS
-Saved speedtest
-Docker
-Nginx
-Apache
-Cloudflared
-SSH
-UFW
-```
+- Native distro logo using Fastfetch or Neofetch when available
+- Full system information
+- CPU model, cores, and flags
+- RAM and swap usage
+- Root disk and `/datas` disk if detected
+- GPU information
+- Process count and logged-in users
+- Private IP, public IP cache, gateway, and DNS
+- Saved speedtest result
+- Docker, Nginx, Apache, Cloudflared, SSH, and UFW status
 
 Run:
 
@@ -303,48 +225,7 @@ dasterm full
 
 ---
 
-## Speedtest System
-
-Dasterm does not run speedtest every time you log in.
-
-During installation, you can choose to run the first speedtest. The result is saved to:
-
-```text
-~/.cache/dasterm/speedtest.json
-```
-
-The dashboard reads from that saved result.
-
-View saved speedtest result:
-
-```bash
-/speedtest
-```
-
-Run a new speedtest and save the result:
-
-```bash
-/respeedtest
-```
-
-Speed conversion:
-
-```text
-MB/s = Mbps / 8
-Gbps = Mbps / 1000
-GB/s = Mbps / 8000
-```
-
-Example:
-
-```text
-Download : 938.42 Mbps | 117.30 MB/s | 0.938 Gbps | 0.117 GB/s
-Upload   : 812.10 Mbps | 101.51 MB/s | 0.812 Gbps | 0.102 GB/s
-```
-
----
-
-## Command Menu
+## Commands
 
 Show all commands:
 
@@ -352,34 +233,32 @@ Show all commands:
 /help
 ```
 
-Available commands:
+| Command | Description |
+| --- | --- |
+| `/help` | Show command menu |
+| `/status` | Show active dashboard mode |
+| `/lite` | Show Lite dashboard |
+| `/full` | Show Full dashboard |
+| `/speedtest` | Show saved speedtest result |
+| `/respeedtest` | Run speedtest again and save the result |
+| `/network` | Show network, DNS, gateway, IP, ports, and speed cache |
+| `/storage` | Show disk, `/datas`, mounts, Docker root, and largest folders |
+| `/services` | Show Docker, PM2, Nginx, Apache, Cloudflared, SSH, and ports |
+| `/security` | Check firewall, SSH, fail2ban, and failed login signals |
+| `/doctor` | Check installation, dependencies, cache, config, and system health |
+| `/ai <request>` | Ask Dasterm AI |
+| `/brain-ai` | Show today's AI memory |
+| `/clear-brain-ai` | Clear today's AI memory |
+| `/ai-provider` | Show AI provider order |
+| `/ai-reset-provider` | Reset AI provider order |
+| `/ai-test` | Test all AI providers |
+| `/config` | Open interactive configuration |
+| `/update` | Update Dasterm |
+| `/uninstall` | Open clean uninstall flow |
+| `/version` | Show Dasterm version |
+| `/about` | Show project info |
 
-```text
-/help              Show command menu
-/status            Show active dashboard mode
-/lite              Show lite dashboard
-/full              Show full dashboard
-/speedtest         Show saved speedtest result
-/respeedtest       Run speedtest again and save result
-/network           Show network, DNS, gateway, IP, ports, and speed cache
-/storage           Show disk, /datas, mounts, Docker root, largest folders
-/services          Show Docker, PM2, Nginx, Apache, Cloudflared, SSH, ports
-/security          Check firewall, SSH root login, password auth, fail2ban
-/doctor            Check Dasterm installation, dependencies, cache, config
-/ai <request>      Ask Dasterm AI
-/brain-ai          Show today's AI memory
-/clear-brain-ai    Clear today's AI memory
-/ai-provider       Show AI provider order
-/ai-reset-provider Reset AI provider order
-/ai-test           Test all AI providers
-/config            Open interactive config
-/update            Update Dasterm
-/uninstall         Open clean uninstall flow
-/version           Show Dasterm version
-/about             Show project info
-```
-
-Slash commands are shell aliases. The original command also works:
+Slash commands are shell aliases. The original CLI also works:
 
 ```bash
 dasterm help
@@ -389,15 +268,54 @@ dasterm ai "cek storage server saya"
 
 ---
 
+## Speedtest System
+
+Dasterm does not run speedtest every time you log in. That keeps login fast and avoids wasting bandwidth.
+
+During installation, you can run the first speedtest. The result is saved to:
+
+```text
+~/.cache/dasterm/speedtest.json
+```
+
+Show saved result:
+
+```bash
+/speedtest
+```
+
+Run a new test and update the cache:
+
+```bash
+/respeedtest
+```
+
+Conversion used by Dasterm:
+
+```text
+MB/s = Mbps / 8
+Gbps = Mbps / 1000
+GB/s = Mbps / 8000
+```
+
+Example output:
+
+```text
+Download : 938.42 Mbps | 117.30 MB/s | 0.938 Gbps | 0.117 GB/s
+Upload   : 812.10 Mbps | 101.51 MB/s | 0.812 Gbps | 0.102 GB/s
+```
+
+---
+
 ## AI Assistant
 
-Ask AI:
+Ask AI from your terminal:
 
 ```bash
 /ai cek storage server saya
 ```
 
-AI internally returns structured metadata:
+Dasterm expects structured AI output like this:
 
 ```json
 {
@@ -406,7 +324,7 @@ AI internally returns structured metadata:
 }
 ```
 
-If AI suggests a command, Dasterm asks for approval first:
+If AI suggests a command, Dasterm asks for confirmation first:
 
 ```text
 AI suggests this command:
@@ -416,26 +334,24 @@ dasterm storage
 Run this command? [y/N]
 ```
 
-The command will not run unless you approve it.
+The command is not executed unless you approve it.
 
 ---
 
 ## AI Memory
 
-AI memory is saved daily in:
+AI memory is stored daily in:
 
 ```text
 ~/.cache/dasterm/ai-memory.json
 ```
 
-Rules:
+Behavior:
 
-```text
-Memory resets every day based on WIB date
-/clear-brain-ai clears memory manually
-If memory items exceed 5, Dasterm asks AI to summarize them
-The summary becomes the next memory context
-```
+- Memory resets every day based on WIB date
+- `/clear-brain-ai` clears memory manually
+- When memory items exceed the configured limit, Dasterm asks AI to summarize them
+- The summary becomes the next context memory
 
 ---
 
@@ -449,9 +365,13 @@ Default provider order:
 3. prexzy zai
 ```
 
-If the main provider is slow or fails for more than 10 seconds, Dasterm ignores it and uses fallback.
+Fallback behavior:
 
-If the main provider delays 3 times, Dasterm rotates provider order automatically.
+- If the main provider is slow or fails for more than 10 seconds, Dasterm tries the next provider
+- If the main provider delays repeatedly, Dasterm can rotate provider order automatically
+- `/ai-provider` shows the current order
+- `/ai-reset-provider` resets the provider order
+- `/ai-test` checks all configured providers
 
 ---
 
@@ -463,23 +383,19 @@ Run:
 /storage
 ```
 
-Shows:
+It checks:
 
-```text
-Root disk
-Root filesystem
-Root inode usage
-/datas disk if available
-/datas filesystem
-/datas inode usage
-Docker root directory
-Docker disk usage
-Important mounts
-Largest folders in /
-Largest folders in /datas
-Nearby node_modules
-Suggestions for moving heavy data
-```
+- Root disk usage
+- Root filesystem and inode usage
+- `/datas` disk when available
+- `/datas` filesystem and inode usage
+- Docker root directory
+- Docker disk usage
+- Important mounts
+- Largest folders in `/`
+- Largest folders in `/datas`
+- Nearby `node_modules`
+- Suggestions for moving heavy data
 
 ---
 
@@ -491,23 +407,21 @@ Run:
 /services
 ```
 
-Shows:
+It checks:
 
-```text
-Docker
-PM2
-Nginx
-Apache
-Cloudflared
-SSH
-Cron
-PostgreSQL
-MySQL/MariaDB
-Redis
-Failed systemd units
-Listening ports
-Top service processes
-```
+- Docker
+- PM2
+- Nginx
+- Apache
+- Cloudflared
+- SSH
+- Cron
+- PostgreSQL
+- MySQL or MariaDB
+- Redis
+- Failed systemd units
+- Listening ports
+- Top service processes
 
 ---
 
@@ -519,22 +433,20 @@ Run:
 /security
 ```
 
-Shows:
+It checks:
 
-```text
-Security score
-Firewall status
-SSH root login setting
-SSH password authentication setting
-SSH public key setting
-Fail2ban status
-Sudo/wheel users
-Failed login count in the last 24 hours
-Recent logins
-Suggestions
-```
+- Security score
+- Firewall status
+- SSH root login setting
+- SSH password authentication setting
+- SSH public key setting
+- Fail2ban status
+- Sudo or wheel users
+- Failed login count in the last 24 hours
+- Recent logins
+- Recommended hardening suggestions
 
-Dasterm only reads and suggests. It does not change SSH or firewall settings automatically.
+Dasterm only reads and suggests. It does not automatically change SSH, firewall, or login settings.
 
 ---
 
@@ -546,26 +458,24 @@ Run:
 /doctor
 ```
 
-Checks:
+Doctor checks:
 
-```text
-Dasterm binary
-Library files
-Config file
-Shell integration
-Config permissions
-Cache directory
-Speedtest cache
-Dependencies
-AI runtime
-Internet connectivity
-OS
-Virtualization
-Root disk
-RAM
-Failed units
-Reboot requirement
-```
+- Dasterm binary
+- Library files
+- Config file
+- Shell integration
+- Config permissions
+- Cache directory
+- Speedtest cache
+- Dependencies
+- AI runtime
+- Internet connectivity
+- OS information
+- Virtualization
+- Root disk
+- RAM
+- Failed systemd units
+- Reboot requirement
 
 ---
 
@@ -577,19 +487,19 @@ Run:
 /update
 ```
 
-Dasterm checks the latest version from this repository, shows current and latest version, displays changelog if available, asks for confirmation, downloads files, applies update, and keeps your config.
+Dasterm checks the latest version from this repository, compares it with your installed version, shows changelog information when available, asks for confirmation, downloads updated files, applies the update, and keeps your existing configuration.
 
 ---
 
 ## Reconfigure
 
-Use:
+Use the built-in configuration menu:
 
 ```bash
 /config
 ```
 
-Or direct installer:
+Or run the installer directly:
 
 ```bash
 bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --reconfigure'
@@ -605,7 +515,7 @@ Use:
 /uninstall
 ```
 
-Or direct installer:
+Or run:
 
 ```bash
 bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --uninstall'
@@ -623,97 +533,93 @@ Dasterm shell block from ~/.bashrc and ~/.zshrc
 
 ---
 
-## Files
+## File Locations
 
-```text
-/usr/local/bin/dasterm
-/usr/local/share/dasterm/lib/
-~/.config/dasterm/config.env
-~/.cache/dasterm/
-~/.local/share/dasterm/logs/
-```
+| Path | Purpose |
+| --- | --- |
+| `/usr/local/bin/dasterm` | Main executable |
+| `/usr/local/share/dasterm/` | Shared runtime files |
+| `/usr/local/share/dasterm/lib/` | Library scripts |
+| `~/.config/dasterm/config.env` | User configuration |
+| `~/.cache/dasterm/` | Cache files |
+| `~/.cache/dasterm/speedtest.json` | Saved speedtest result |
+| `~/.cache/dasterm/ai-memory.json` | Daily AI memory |
+| `~/.local/share/dasterm/logs/` | Runtime logs |
 
 ---
 
-## Optional Anonymous Statistics
+## Optional Anonymous Telemetry
 
-Anonymous statistics are disabled by default.
+Anonymous telemetry is disabled by default and only runs when you enable it.
 
-If enabled, they can power public badges such as:
+It can power public project badges such as:
 
-```text
-Total Installs
-Total Runs
-Top OS #1
-Top OS #2
-Top Virtualization
-Top Language
-Top Mode
-```
+- Total installs
+- Total runs
+- AI usage
+- Top OS #1
+- Top OS #2
+- Top virtualization
+- Top language
+- Top mode
+- Unique machines
 
-Collected when enabled:
+When enabled, Dasterm may collect:
 
-```text
-Event type
-Dasterm version
-Linux distro
-Linux distro version
-CPU architecture
-Virtualization type
-Language
-Dashboard mode
-Anonymous machine hash
-Date
-```
+- Event type
+- Dasterm version
+- Linux distro and version
+- CPU architecture
+- Virtualization type
+- Language preference
+- Dashboard mode
+- Anonymous machine hash
+- Date
 
-Not intentionally collected:
+Dasterm does not intentionally collect:
 
-```text
-Username
-Hostname
-Personal files
-Commands
-Process list
-IP address as stored data
-Shell history
-Private keys
-Tokens
-Passwords
-```
+- Username
+- Hostname
+- Personal files
+- Commands
+- Process list
+- Stored IP address data
+- Shell history
+- Private keys
+- Tokens
+- Passwords
 
 ---
 
 ## Supported Systems
 
-Dasterm targets:
+Dasterm targets common Linux environments, including:
 
-```text
-Ubuntu
-Debian
-Linux Mint
-Fedora
-CentOS
-RHEL
-Rocky Linux
-AlmaLinux
-Arch Linux
-Manjaro
-EndeavourOS
-openSUSE
-Alpine Linux
-WSL
-Docker
-LXC
-KVM
-QEMU
-VMware
-```
+- Ubuntu
+- Debian
+- Linux Mint
+- Fedora
+- CentOS
+- RHEL
+- Rocky Linux
+- AlmaLinux
+- Arch Linux
+- Manjaro
+- EndeavourOS
+- openSUSE
+- Alpine Linux
+- WSL
+- Docker
+- LXC
+- KVM
+- QEMU
+- VMware
 
 ---
 
 ## Requirements
 
-Core:
+Core dependencies:
 
 ```text
 bash
@@ -745,19 +651,42 @@ fail2ban
 
 ---
 
-## Author
+## Troubleshooting
 
-aka
+Run Doctor first:
 
-Email: [akaanakbaik17@proton.me](mailto:akaanakbaik17@proton.me)
+```bash
+/doctor
+```
 
-GitHub: [github.com/akaanakbaik](https://github.com/akaanakbaik)
+Common recovery commands:
+
+```bash
+/update
+/config
+```
+
+Repair directly with the installer:
+
+```bash
+bash -c 'f=/tmp/dasterm-install.sh; curl -fsSL https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/install.sh -o "$f" && sudo bash "$f" --repair'
+```
+
+If slash commands are not available, reload your shell:
+
+```bash
+source ~/.bashrc
+```
+
+Or open a new terminal session.
 
 ---
 
-## Project
+## Project Links
 
-Repository: [github.com/akaanakbaik/dastermv2](https://github.com/akaanakbaik/dastermv2)
+- Repository: [github.com/akaanakbaik/dastermv2](https://github.com/akaanakbaik/dastermv2)
+- Author: [aka](https://github.com/akaanakbaik)
+- Email: [akaanakbaik17@proton.me](mailto:akaanakbaik17@proton.me)
 
 ---
 
