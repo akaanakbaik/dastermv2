@@ -18,8 +18,10 @@ mkdir -p /usr/local/bin
 mkdir -p /usr/local/share/dasterm/lib
 
 install -m 755 "$ROOT_DIR/bin/dasterm" /usr/local/bin/dasterm
+ln -sf /usr/local/bin/dasterm /usr/local/bin/dashterm
 cp -f "$ROOT_DIR/lib/"*.sh /usr/local/share/dasterm/lib/
 chmod 644 /usr/local/share/dasterm/lib/*.sh
+chmod 755 /usr/local/bin/dashterm
 
 mkdir -p "$TARGET_HOME/.config/dasterm" "$TARGET_HOME/.cache/dasterm" "$TARGET_HOME/.local/share/dasterm/logs"
 

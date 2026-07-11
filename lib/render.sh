@@ -97,7 +97,7 @@ dasterm_render_full() {
 
 dasterm_render_side_by_side() {
   local mode="$1"
-  clear 2>/dev/null || true
+  printf "\033[H\033[2J\033[3J" 2>/dev/null || true
 
   # 1. Capture logo lines
   local logo_lines=()

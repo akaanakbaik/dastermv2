@@ -512,8 +512,9 @@ write_config() {
 install_files() {
   mkdir -p "$BIN_DIR" "$LIB_DIR"
   install -m 755 "$TMP_DIR/bin/dasterm" "$BIN_DIR/dasterm"
+  ln -sf "$BIN_DIR/dasterm" "$BIN_DIR/dashterm"
   cp -f "$TMP_DIR/lib/"*.sh "$LIB_DIR/"
-  chmod 755 "$BIN_DIR/dasterm"
+  chmod 755 "$BIN_DIR/dasterm" "$BIN_DIR/dashterm"
   chmod 644 "$LIB_DIR/"*.sh
 }
 
