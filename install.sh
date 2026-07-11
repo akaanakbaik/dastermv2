@@ -456,6 +456,16 @@ download_file() {
 }
 
 download_sources() {
+  local script_dir
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [ -f "${script_dir}/bin/dasterm" ] && [ -d "${script_dir}/lib" ]; then
+    info "Local repository detected. Copying local files..."
+    mkdir -p "$TMP_DIR/bin" "$TMP_DIR/lib"
+    cp -f "${script_dir}/bin/dasterm" "$TMP_DIR/bin/dasterm"
+    cp -f "${script_dir}/lib/"*.sh "$TMP_DIR/lib/"
+    return 0
+  fi
+
   mkdir -p "$TMP_DIR/bin" "$TMP_DIR/lib"
   download_file "bin/dasterm" "$TMP_DIR/bin/dasterm"
 
