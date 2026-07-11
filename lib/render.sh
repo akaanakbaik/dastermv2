@@ -24,7 +24,12 @@ dasterm_logo_full() {
 dasterm_box_line() {
   local char="$1"
   local width="${2:-58}"
-  printf "%${width}s" "" | tr " " "$char"
+  local i
+  local out=""
+  for ((i=0; i<width; i++)); do
+    out="${out}${char}"
+  done
+  echo "$out"
 }
 
 dasterm_section() {
@@ -188,34 +193,59 @@ dasterm_render_side_by_side() {
     fi
   done
 
-  # Print side-by-side
-  local i=0
-  local logo_count=${#logo_lines[@]}
-  local info_count=${#info_lines[@]}
-  local max_lines=$(( logo_count > info_count ? logo_count : info_count ))
+  # Detect terminal cols
+  local term_cols="${COLUMNS:-}"
+  if [ -z "$term_cols" ] || ! echo "$term_cols" | grep -qE '^[0-9]+$'; then
+    term_cols=$(tput cols 2>/dev/null || echo 80)
+  fi
 
-  for ((i=0; i<max_lines; i++)); do
-    local l_val=""
-    local r_val=""
-    local vis_l=""
+  local required_cols=$(( max_logo_len + 5 + 58 ))
 
-    if [ $i -lt $logo_count ]; then
-      l_val="${logo_lines[$i]}"
-      vis_l=$(echo "$l_val" | sed "s/$(printf '\033')\\[[0-9;]*m//g")
-    fi
+  if [ "$term_cols" -lt "$required_cols" ]; then
+    # Fallback to vertical stacked layout for narrow terminals
+    for logo_line in "${logo_lines[@]}"; do
+      local visible_line
+      visible_line=$(echo "$logo_line" | sed "s/$(printf '\033')\\[[0-9;]*m//g")
+      visible_line=$(echo "$visible_line" | tr -d '[:space:]')
+      if [ -n "$visible_line" ]; then
+        printf "%s\n" "$logo_line"
+      fi
+    done
+    echo
 
-    if [ $i -lt $info_count ]; then
-      r_val="${info_lines[$i]}"
-    fi
+    for line in "${info_lines[@]}"; do
+      printf "%s\n" "$line"
+    done
+  else
+    # Side-by-side layout for wide terminals
+    local i=0
+    local logo_count=${#logo_lines[@]}
+    local info_count=${#info_lines[@]}
+    local max_lines=$(( logo_count > info_count ? logo_count : info_count ))
 
-    # Pad the logo line
-    local pad_len=$(( max_logo_len - ${#vis_l} ))
-    local pad=""
-    [ $pad_len -gt 0 ] && pad=$(printf "%${pad_len}s" "")
+    for ((i=0; i<max_lines; i++)); do
+      local l_val=""
+      local r_val=""
+      local vis_l=""
 
-    # Print
-    printf "%s%s   %s\n" "$l_val" "$pad" "$r_val"
-  done
+      if [ $i -lt $logo_count ]; then
+        l_val="${logo_lines[$i]}"
+        vis_l=$(echo "$l_val" | sed "s/$(printf '\033')\\[[0-9;]*m//g")
+      fi
+
+      if [ $i -lt $info_count ]; then
+        r_val="${info_lines[$i]}"
+      fi
+
+      # Pad the logo line
+      local pad_len=$(( max_logo_len - ${#vis_l} ))
+      local pad=""
+      [ $pad_len -gt 0 ] && pad=$(printf "%${pad_len}s" "")
+
+      # Print
+      printf "%s%s   %s\n" "$l_val" "$pad" "$r_val"
+    done
+  fi
 
   dasterm_footer
 }
