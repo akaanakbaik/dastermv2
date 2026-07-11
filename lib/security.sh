@@ -57,11 +57,20 @@ dasterm_security_last_logins() {
 
 dasterm_security_failed_logins() {
   if dasterm_has journalctl; then
-    journalctl -u ssh -u sshd --since "24 hours ago" 2>/dev/null | grep -ciE 'failed password|invalid user|authentication failure' || echo 0
+    local err_msg
+    if ! err_msg="$(journalctl -n 1 --quiet 2>&1)" || echo "$err_msg" | grep -qiE 'No journal files|permission|access'; then
+      echo "N/A (Access Denied)"
+      return
+    fi
+    journalctl -u ssh -u sshd --since "24 hours ago" 2>/dev/null | grep -ciE 'failed password|invalid user|authentication failure' || true
     return
   fi
   if [ -f /var/log/auth.log ]; then
-    grep -ciE 'failed password|invalid user|authentication failure' /var/log/auth.log 2>/dev/null || echo 0
+    if [ ! -r /var/log/auth.log ]; then
+      echo "N/A (Access Denied)"
+      return
+    fi
+    grep -ciE 'failed password|invalid user|authentication failure' /var/log/auth.log 2>/dev/null || true
     return
   fi
   echo "N/A"

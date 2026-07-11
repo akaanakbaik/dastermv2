@@ -18,8 +18,8 @@ dasterm_t() {
     en:help_full) echo "Show complete dashboard with detailed data." ;;
     id:help_speedtest) echo "Lihat hasil speedtest yang tersimpan." ;;
     en:help_speedtest) echo "Show saved speedtest result." ;;
-    id:help_respeedtest) echo "Jalankan ulang speedtest dan simpan hasil baru." ;;
-    en:help_respeedtest) echo "Run speedtest again and save new result." ;;
+    id:help_respeedtest) echo "Jalankan ulang speedtest (pilihan: fast, ookla, python, atau --server ID)." ;;
+    en:help_respeedtest) echo "Run speedtest again (options: fast, ookla, python, or --server ID)." ;;
     id:help_network) echo "Lihat detail jaringan, DNS, gateway, IP, dan speed cache." ;;
     en:help_network) echo "Show network, DNS, gateway, IP, and speed cache details." ;;
     id:help_storage) echo "Lihat root disk, /datas, mount, dan folder besar." ;;
@@ -30,16 +30,7 @@ dasterm_t() {
     en:help_security) echo "Check firewall, SSH, root login, and security signals." ;;
     id:help_doctor) echo "Cek kesehatan instalasi Dasterm dan dependency." ;;
     en:help_doctor) echo "Check Dasterm installation health and dependencies." ;;
-    id:help_ai) echo "Tanya AI Dasterm, bisa memberi saran command dengan persetujuan." ;;
-    en:help_ai) echo "Ask Dasterm AI, can suggest commands with approval." ;;
-    id:help_brain) echo "Lihat ringkasan memori AI hari ini." ;;
-    en:help_brain) echo "Show today's AI memory summary." ;;
-    id:help_clear_brain) echo "Hapus memori AI hari ini." ;;
-    en:help_clear_brain) echo "Clear today's AI memory." ;;
-    id:help_provider) echo "Lihat urutan API AI aktif dan fallback." ;;
-    en:help_provider) echo "Show active AI API order and fallback." ;;
-    id:help_ai_test) echo "Test semua provider AI." ;;
-    en:help_ai_test) echo "Test all AI providers." ;;
+
     id:help_config) echo "Buka konfigurasi interaktif." ;;
     en:help_config) echo "Open interactive configuration." ;;
     id:help_update) echo "Cek dan update Dasterm ke versi terbaru." ;;
@@ -48,6 +39,10 @@ dasterm_t() {
     en:help_uninstall) echo "Remove Dasterm cleanly." ;;
     id:help_version) echo "Lihat versi Dasterm." ;;
     en:help_version) echo "Show Dasterm version." ;;
+    id:help_about) echo "Lihat informasi tentang Dasterm v2." ;;
+    en:help_about) echo "Show about information for Dasterm v2." ;;
+    id:help_watch) echo "Tampilkan dashboard interaktif secara real-time (Watch mode)." ;;
+    en:help_watch) echo "Show interactive dashboard in real-time (Watch mode)." ;;
     id:config_title) echo "Konfigurasi Dasterm" ;;
     en:config_title) echo "Dasterm Configuration" ;;
     id:config_saved) echo "Konfigurasi berhasil disimpan. Buka terminal baru atau jalankan source ~/.bashrc." ;;
@@ -68,20 +63,7 @@ dasterm_t() {
     en:security) echo "Security" ;;
     id:speedtest) echo "Speedtest" ;;
     en:speedtest) echo "Speedtest" ;;
-    id:ai_title) echo "Dasterm AI" ;;
-    en:ai_title) echo "Dasterm AI" ;;
-    id:ai_empty) echo "Tulis permintaan setelah /ai." ;;
-    en:ai_empty) echo "Write your request after /ai." ;;
-    id:ai_cmd_suggest) echo "AI menyarankan command" ;;
-    en:ai_cmd_suggest) echo "AI suggests this command" ;;
-    id:ai_run_cmd) echo "Jalankan command ini?" ;;
-    en:ai_run_cmd) echo "Run this command?" ;;
-    id:ai_cancel) echo "Command dibatalkan." ;;
-    en:ai_cancel) echo "Command cancelled." ;;
-    id:ai_memory_clear) echo "Memori AI berhasil dihapus." ;;
-    en:ai_memory_clear) echo "AI memory cleared." ;;
-    id:ai_memory_empty) echo "Belum ada memori AI hari ini." ;;
-    en:ai_memory_empty) echo "No AI memory today yet." ;;
+
     id:speed_saved_empty) echo "Belum ada hasil speedtest tersimpan. Jalankan /respeedtest." ;;
     en:speed_saved_empty) echo "No saved speedtest result. Run /respeedtest." ;;
     id:speed_running) echo "Menjalankan speedtest. Hasil akan disimpan." ;;

@@ -134,36 +134,130 @@ dasterm_speedtest_curl_fallback() {
 }
 
 dasterm_speedtest_run() {
-  local quiet="${1:-}"
+  local mode="standard"
+  local quiet="off"
+  local server_id=""
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --quiet|-q) quiet="on" ;;
+      fast|ookla|python|standard) mode="$1" ;;
+      --server|-s)
+        shift
+        server_id="${1:-}"
+        ;;
+      *)
+        if [[ "$1" =~ ^[0-9]+$ ]]; then
+          server_id="$1"
+        fi
+        ;;
+    esac
+    shift
+  done
+
   local file json
   file="$(dasterm_speedtest_file)"
   dasterm_mkdirs
-  [ "$quiet" = "--quiet" ] || dasterm_info "$(dasterm_t speed_running)"
+
+  [ "$quiet" = "on" ] || dasterm_info "$(dasterm_t speed_running) ($mode)..."
 
   json=""
 
-  if dasterm_has speedtest && dasterm_has jq; then
-    json="$(dasterm_speedtest_ookla || true)"
-  fi
-
-  if [ -z "$json" ] && dasterm_has speedtest-cli && dasterm_has jq; then
-    json="$(dasterm_speedtest_cli_json_cmd speedtest-cli || true)"
-  fi
-
-  if [ -z "$json" ] && dasterm_has speedtest && dasterm_has jq; then
-    json="$(dasterm_speedtest_cli_json_cmd speedtest || true)"
-  fi
-
-  if [ -z "$json" ] && dasterm_has speedtest; then
-    json="$(dasterm_speedtest_text_cmd speedtest || true)"
-  fi
-
-  if [ -z "$json" ] && dasterm_has speedtest-cli; then
-    json="$(dasterm_speedtest_text_cmd speedtest-cli || true)"
-  fi
-
-  if [ -z "$json" ] && dasterm_has curl; then
-    json="$(dasterm_speedtest_curl_fallback || true)"
+  if [ "$mode" = "fast" ]; then
+    if dasterm_has curl; then
+      json="$(dasterm_speedtest_curl_fallback || true)"
+    fi
+  elif [ "$mode" = "ookla" ]; then
+    if dasterm_has speedtest && dasterm_has jq; then
+      if [ -n "$server_id" ]; then
+        local raw
+        raw="$(timeout 180 speedtest --accept-license --accept-gdpr --format=json --server-id="$server_id" 2>/dev/null || true)"
+        if [ -n "$raw" ] && echo "$raw" | jq -e . >/dev/null 2>&1; then
+          local down up ping jitter loss provider region server
+          down="$(echo "$raw" | jq -r '.download.bandwidth // 0' | awk '{printf "%.0f", $1*8}')"
+          up="$(echo "$raw" | jq -r '.upload.bandwidth // 0' | awk '{printf "%.0f", $1*8}')"
+          ping="$(echo "$raw" | jq -r '.ping.latency // 0')"
+          jitter="$(echo "$raw" | jq -r '.ping.jitter // 0')"
+          loss="$(echo "$raw" | jq -r '.packetLoss // 0')"
+          provider="$(echo "$raw" | jq -r '.isp // empty')"
+          region="$(echo "$raw" | jq -r '.server.location // empty')"
+          server="$(echo "$raw" | jq -r '.server.name // empty')"
+          json="$(dasterm_speed_calc_json "$down" "$up" "$ping" "$jitter" "$loss" "$provider" "$region" "$server" "ookla-speedtest-server")"
+        fi
+      else
+        json="$(dasterm_speedtest_ookla || true)"
+      fi
+    fi
+  elif [ "$mode" = "python" ]; then
+    if dasterm_has speedtest-cli && dasterm_has jq; then
+      if [ -n "$server_id" ]; then
+        local raw down up ping provider region server
+        raw="$(timeout 180 speedtest-cli --json --server "$server_id" 2>/dev/null || true)"
+        if [ -n "$raw" ] && echo "$raw" | jq -e . >/dev/null 2>&1; then
+          down="$(echo "$raw" | jq -r '.download // 0')"
+          up="$(echo "$raw" | jq -r '.upload // 0')"
+          ping="$(echo "$raw" | jq -r '.ping // 0')"
+          provider="$(echo "$raw" | jq -r '.client.isp // empty')"
+          region="$(echo "$raw" | jq -r '.server.country // .server.name // empty')"
+          server="$(echo "$raw" | jq -r '.server.sponsor // empty')"
+          json="$(dasterm_speed_calc_json "$down" "$up" "$ping" "0" "unknown" "$provider" "$region" "$server" "speedtest-cli-server")"
+        fi
+      else
+        json="$(dasterm_speedtest_cli_json_cmd speedtest-cli || true)"
+      fi
+    fi
+  else
+    # standard cascade
+    if [ -n "$server_id" ]; then
+      if dasterm_has speedtest && dasterm_has jq; then
+        local raw
+        raw="$(timeout 180 speedtest --accept-license --accept-gdpr --format=json --server-id="$server_id" 2>/dev/null || true)"
+        if [ -n "$raw" ] && echo "$raw" | jq -e . >/dev/null 2>&1; then
+          local down up ping jitter loss provider region server
+          down="$(echo "$raw" | jq -r '.download.bandwidth // 0' | awk '{printf "%.0f", $1*8}')"
+          up="$(echo "$raw" | jq -r '.upload.bandwidth // 0' | awk '{printf "%.0f", $1*8}')"
+          ping="$(echo "$raw" | jq -r '.ping.latency // 0')"
+          jitter="$(echo "$raw" | jq -r '.ping.jitter // 0')"
+          loss="$(echo "$raw" | jq -r '.packetLoss // 0')"
+          provider="$(echo "$raw" | jq -r '.isp // empty')"
+          region="$(echo "$raw" | jq -r '.server.location // empty')"
+          server="$(echo "$raw" | jq -r '.server.name // empty')"
+          json="$(dasterm_speed_calc_json "$down" "$up" "$ping" "$jitter" "$loss" "$provider" "$region" "$server" "ookla-speedtest-server")"
+        fi
+      fi
+      if [ -z "$json" ] && dasterm_has speedtest-cli && dasterm_has jq; then
+        local raw down up ping provider region server
+        raw="$(timeout 180 speedtest-cli --json --server "$server_id" 2>/dev/null || true)"
+        if [ -n "$raw" ] && echo "$raw" | jq -e . >/dev/null 2>&1; then
+          down="$(echo "$raw" | jq -r '.download // 0')"
+          up="$(echo "$raw" | jq -r '.upload // 0')"
+          ping="$(echo "$raw" | jq -r '.ping // 0')"
+          provider="$(echo "$raw" | jq -r '.client.isp // empty')"
+          region="$(echo "$raw" | jq -r '.server.country // .server.name // empty')"
+          server="$(echo "$raw" | jq -r '.server.sponsor // empty')"
+          json="$(dasterm_speed_calc_json "$down" "$up" "$ping" "0" "unknown" "$provider" "$region" "$server" "speedtest-cli-server")"
+        fi
+      fi
+    else
+      if dasterm_has speedtest && dasterm_has jq; then
+        json="$(dasterm_speedtest_ookla || true)"
+      fi
+      if [ -z "$json" ] && dasterm_has speedtest-cli && dasterm_has jq; then
+        json="$(dasterm_speedtest_cli_json_cmd speedtest-cli || true)"
+      fi
+      if [ -z "$json" ] && dasterm_has speedtest && dasterm_has jq; then
+        json="$(dasterm_speedtest_cli_json_cmd speedtest || true)"
+      fi
+      if [ -z "$json" ] && dasterm_has speedtest; then
+        json="$(dasterm_speedtest_text_cmd speedtest || true)"
+      fi
+      if [ -z "$json" ] && dasterm_has speedtest-cli; then
+        json="$(dasterm_speedtest_text_cmd speedtest-cli || true)"
+      fi
+      if [ -z "$json" ] && dasterm_has curl; then
+        json="$(dasterm_speedtest_curl_fallback || true)"
+      fi
+    fi
   fi
 
   if [ -z "$json" ]; then
@@ -174,7 +268,7 @@ dasterm_speedtest_run() {
   printf "%s\n" "$json" | jq . > "$file" 2>/dev/null || printf "%s\n" "$json" > "$file"
   chmod 600 "$file"
 
-  if [ "$quiet" != "--quiet" ]; then
+  if [ "$quiet" != "on" ]; then
     dasterm_success "$(dasterm_t speed_saved)"
     dasterm_speedtest_show
   fi

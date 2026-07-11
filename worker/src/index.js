@@ -1,4 +1,4 @@
-const allowedEvents = new Set(["install", "run", "update", "respeedtest", "ai", "doctor"]);
+const allowedEvents = new Set(["install", "run", "update", "respeedtest", "doctor"]);
 const allowedLang = new Set(["id", "en"]);
 const allowedMode = new Set(["lite", "full"]);
 const allowedArch = new Set(["x86_64", "amd64", "aarch64", "arm64", "armv7l", "i386", "i686", "unknown"]);

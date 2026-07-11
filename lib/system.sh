@@ -63,7 +63,9 @@ dasterm_cpu_flags() {
 
 dasterm_gpu() {
   if dasterm_has lspci; then
-    lspci 2>/dev/null | grep -iE 'vga|3d|display' | head -1 | cut -d: -f3- | dasterm_trim | cut -c1-70
+    local gpu
+    gpu="$(lspci 2>/dev/null | grep -iE 'vga|3d|display' | head -1 | cut -d: -f3- | dasterm_trim | cut -c1-70)"
+    [ -n "$gpu" ] && echo "$gpu" || echo "N/A"
     return
   fi
   echo "N/A"
@@ -77,7 +79,7 @@ dasterm_ram_line() {
 }
 
 dasterm_ram_percent() {
-  free 2>/dev/null | awk '/Mem:/ {printf "%.1f", ($3/$2)*100}' || echo "0.0"
+  free 2>/dev/null | awk '/Mem:/ {if($2 > 0) printf "%.1f", ($3/$2)*100; else print "0.0"}' || echo "0.0"
 }
 
 dasterm_swap_line() {

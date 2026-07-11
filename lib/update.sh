@@ -70,6 +70,12 @@ dasterm_update_run() {
   if ! dasterm_confirm "$(dasterm_t update_confirm)"; then
     return 0
   fi
+
+  if [ "$(id -u)" -ne 0 ] && dasterm_has sudo; then
+    dasterm_info "Update membutuhkan hak akses administrator. Silakan masukkan password:"
+    sudo -v || return 1
+  fi
+
   tmp="${TMPDIR:-/tmp}/dasterm-update-$$"
   rm -rf "$tmp"
   mkdir -p "$tmp"

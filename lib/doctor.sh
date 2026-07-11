@@ -95,15 +95,7 @@ dasterm_doctor_speed_provider() {
   fi
 }
 
-dasterm_doctor_ai_provider() {
-  if dasterm_has curl && dasterm_has jq; then
-    dasterm_doctor_check "AI Runtime" ok "curl + jq available"
-  elif dasterm_has curl; then
-    dasterm_doctor_check "AI Runtime" warn "curl available, jq missing"
-  else
-    dasterm_doctor_check "AI Runtime" error "curl missing"
-  fi
-}
+
 
 dasterm_doctor_permissions() {
   if [ -w "$DASTERM_CONFIG_DIR" ] && [ -w "$DASTERM_CACHE_DIR" ]; then
@@ -156,7 +148,6 @@ dasterm_doctor_show() {
     dasterm_doctor_dep "$dep"
   done
   dasterm_doctor_speed_provider
-  dasterm_doctor_ai_provider
   echo
 
   dasterm_title "Connectivity"

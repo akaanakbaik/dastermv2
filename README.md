@@ -4,7 +4,7 @@
 
 ### A smart, beautiful, and VPS-friendly Linux terminal dashboard.
 
-Dasterm v2 turns a normal Linux terminal login into a clean interactive dashboard with system insight, cached speedtest, slash commands, AI assistance, storage diagnostics, security checks, service monitoring, self-update, and optional public telemetry badges.
+Dasterm v2 turns a normal Linux terminal login into a clean interactive dashboard with system insight, cached speedtest, slash commands, storage diagnostics, security checks, service monitoring, self-update, and optional public telemetry badges.
 
 <br />
 
@@ -30,9 +30,7 @@ Dasterm v2 turns a normal Linux terminal login into a clean interactive dashboar
 <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
   <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/run.json" alt="Total runs" />
 </a>
-<a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
-  <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/ai.json" alt="AI usage" />
-</a>
+
 <a href="https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/generated/summary.json">
   <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/akaanakbaik/dastermv2/main/stats/badges/top-os-1.json" alt="Top OS 1" />
 </a>
@@ -46,7 +44,7 @@ Dasterm v2 turns a normal Linux terminal login into a clean interactive dashboar
 <br />
 <br />
 
-[Install](#installation) · [Commands](#commands) · [AI Assistant](#ai-assistant) · [Speedtest](#speedtest-system) · [Security](#security-check) · [Telemetry](#optional-anonymous-telemetry)
+[Install](#installation) · [Commands](#commands) · [Speedtest](#speedtest-system) · [Security](#security-check) · [Telemetry](#optional-anonymous-telemetry)
 
 </div>
 
@@ -76,9 +74,7 @@ It is especially useful for:
 | Language | Indonesian and English interface |
 | Installer | Install, update, repair, reconfigure, and uninstall from one installer |
 | Speedtest | Cached speedtest with Mbps, MB/s, Gbps, and GB/s conversion |
-| AI | AI assistant with safe command approval before execution |
-| AI Memory | Daily memory cache based on WIB date with manual reset support |
-| Provider Fallback | AI provider fallback, timeout handling, and auto-rotation |
+
 | Storage | Root disk, `/datas`, mounts, Docker root, inode usage, and largest folders |
 | Services | Docker, PM2, Nginx, Apache, Cloudflared, SSH, Cron, databases, ports |
 | Security | Firewall, SSH, fail2ban, failed login signal, sudo users, login history |
@@ -137,7 +133,7 @@ During setup, Dasterm can ask for:
 - Custom `User@Host` display
 - Color theme: Pastel, Cyber, Ocean, or Mono
 - Dashboard display on every login
-- Slash command aliases such as `/help`, `/ai`, and `/update`
+- Slash command aliases such as `/help`, `/update`, and `/watch`
 - Initial speedtest cache generation
 - Optional anonymous statistics for README badges
 
@@ -246,17 +242,13 @@ Show all commands:
 | `/services` | Show Docker, PM2, Nginx, Apache, Cloudflared, SSH, and ports |
 | `/security` | Check firewall, SSH, fail2ban, and failed login signals |
 | `/doctor` | Check installation, dependencies, cache, config, and system health |
-| `/ai <request>` | Ask Dasterm AI |
-| `/brain-ai` | Show today's AI memory |
-| `/clear-brain-ai` | Clear today's AI memory |
-| `/ai-provider` | Show AI provider order |
-| `/ai-reset-provider` | Reset AI provider order |
-| `/ai-test` | Test all AI providers |
+
 | `/config` | Open interactive configuration |
 | `/update` | Update Dasterm |
 | `/uninstall` | Open clean uninstall flow |
 | `/version` | Show Dasterm version |
 | `/about` | Show project info |
+| `/watch` | Show interactive dashboard in real-time (Watch mode) |
 
 Slash commands are shell aliases. The original CLI also works:
 
@@ -307,73 +299,7 @@ Upload   : 812.10 Mbps | 101.51 MB/s | 0.812 Gbps | 0.102 GB/s
 
 ---
 
-## AI Assistant
 
-Ask AI from your terminal:
-
-```bash
-/ai cek storage server saya
-```
-
-Dasterm expects structured AI output like this:
-
-```json
-{
-  "hasil": "Saya bisa menampilkan ringkasan storage, mount, root disk, /datas, Docker root, dan folder terbesar.",
-  "cmd": "dasterm storage"
-}
-```
-
-If AI suggests a command, Dasterm asks for confirmation first:
-
-```text
-AI suggests this command:
-
-dasterm storage
-
-Run this command? [y/N]
-```
-
-The command is not executed unless you approve it.
-
----
-
-## AI Memory
-
-AI memory is stored daily in:
-
-```text
-~/.cache/dasterm/ai-memory.json
-```
-
-Behavior:
-
-- Memory resets every day based on WIB date
-- `/clear-brain-ai` clears memory manually
-- When memory items exceed the configured limit, Dasterm asks AI to summarize them
-- The summary becomes the next context memory
-
----
-
-## AI Provider Fallback
-
-Default provider order:
-
-```text
-1. chocomilk
-2. prexzy copilot
-3. prexzy zai
-```
-
-Fallback behavior:
-
-- If the main provider is slow or fails for more than 10 seconds, Dasterm tries the next provider
-- If the main provider delays repeatedly, Dasterm can rotate provider order automatically
-- `/ai-provider` shows the current order
-- `/ai-reset-provider` resets the provider order
-- `/ai-test` checks all configured providers
-
----
 
 ## Storage Analyzer
 

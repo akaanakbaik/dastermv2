@@ -45,7 +45,7 @@ dasterm_load_all() {
   fi
 
   local f
-  for f in render system network speedtest ai update storage security services doctor telemetry; do
+  for f in render system network speedtest update storage security services doctor telemetry; do
     if [ -f "${DASTERM_LIB}/${f}.sh" ]; then
       . "${DASTERM_LIB}/${f}.sh"
     fi
@@ -59,13 +59,45 @@ dasterm_shell_init() {
     . "$DASTERM_CONFIG"
   fi
 
+  local shell_type="${1:-bash}"
+
   if [ "${DASTERM_PROMPT:-on}" = "on" ]; then
     local uh user host
     uh="${DASTERM_USERHOST:-$(whoami)@$(hostname 2>/dev/null || echo linux)}"
     user="${uh%%@*}"
     host="${uh#*@}"
 
-    printf "export PS1='\\[\\033[1;32m\\]%s@%s\\[\\033[0m\\]:\\[\\033[1;34m\\]\\w\\[\\033[0m\\]\\$ '\n" "$user" "$host"
+    if [ "$shell_type" = "zsh" ]; then
+      printf "export PS1='%%{\\033[1;32m%%}%s@%s%%{\\033[0m%%}:%%{\\033[1;34m%%}%%~%%{\\033[0m%%}%%# '\n" "$user" "$host"
+    else
+      printf "export PS1='\\[\\033[1;32m\\]%s@%s\\[\\033[0m\\]:\\[\\033[1;34m\\]\\w\\[\\033[0m\\]\\$ '\n" "$user" "$host"
+    fi
+  fi
+
+  if [ "${DASTERM_SLASH:-on}" = "on" ]; then
+    local name target
+    while IFS=: read -r name target; do
+      [ -n "$name" ] || continue
+      printf "alias /%s='/usr/local/bin/dasterm %s'\n" "$name" "$target"
+    done <<'EOF'
+help:help
+status:status
+lite:lite
+full:full
+speedtest:speedtest
+respeedtest:respeedtest
+network:network
+storage:storage
+services:services
+security:security
+doctor:doctor
+config:config
+update:update
+uninstall:uninstall
+version:version
+about:about
+watch:watch
+EOF
   fi
 }
 
@@ -83,15 +115,12 @@ dasterm_help() {
   dasterm_kv "/services" "$(dasterm_t help_services)"
   dasterm_kv "/security" "$(dasterm_t help_security)"
   dasterm_kv "/doctor" "$(dasterm_t help_doctor)"
-  dasterm_kv "/ai <text>" "$(dasterm_t help_ai)"
-  dasterm_kv "/brain-ai" "$(dasterm_t help_brain)"
-  dasterm_kv "/clear-brain-ai" "$(dasterm_t help_clear_brain)"
-  dasterm_kv "/ai-provider" "$(dasterm_t help_provider)"
-  dasterm_kv "/ai-test" "$(dasterm_t help_ai_test)"
   dasterm_kv "/config" "$(dasterm_t help_config)"
   dasterm_kv "/update" "$(dasterm_t help_update)"
   dasterm_kv "/uninstall" "$(dasterm_t help_uninstall)"
   dasterm_kv "/version" "$(dasterm_t help_version)"
+  dasterm_kv "/about" "$(dasterm_t help_about)"
+  dasterm_kv "/watch" "$(dasterm_t help_watch)"
   dasterm_footer
 }
 
@@ -163,20 +192,18 @@ dasterm_config_menu() {
 
   mkdir -p "$DASTERM_CONFIG_DIR"
 
-  cat > "$DASTERM_CONFIG" <<EOF
-DASTERM_VERSION="${DASTERM_VERSION:-$DASTERM_VERSION_FALLBACK}"
-DASTERM_LANG="$lang"
-DASTERM_MODE="$mode"
-DASTERM_THEME="$theme"
-DASTERM_USERHOST="$uh"
-DASTERM_SHOW="$show"
-DASTERM_PROMPT="$prompt"
-DASTERM_SLASH="$slash"
-DASTERM_TELEMETRY="$telemetry"
-DASTERM_REPO_OWNER="${DASTERM_REPO_OWNER:-akaanakbaik}"
-DASTERM_REPO_NAME="${DASTERM_REPO_NAME:-dastermv2}"
-DASTERM_REPO_BRANCH="${DASTERM_REPO_BRANCH:-main}"
-EOF
+  dasterm_save_config_value "DASTERM_VERSION" "${DASTERM_VERSION:-$DASTERM_VERSION_FALLBACK}"
+  dasterm_save_config_value "DASTERM_LANG" "$lang"
+  dasterm_save_config_value "DASTERM_MODE" "$mode"
+  dasterm_save_config_value "DASTERM_THEME" "$theme"
+  dasterm_save_config_value "DASTERM_USERHOST" "$uh"
+  dasterm_save_config_value "DASTERM_SHOW" "$show"
+  dasterm_save_config_value "DASTERM_PROMPT" "$prompt"
+  dasterm_save_config_value "DASTERM_SLASH" "$slash"
+  dasterm_save_config_value "DASTERM_TELEMETRY" "$telemetry"
+  dasterm_save_config_value "DASTERM_REPO_OWNER" "${DASTERM_REPO_OWNER:-akaanakbaik}"
+  dasterm_save_config_value "DASTERM_REPO_NAME" "${DASTERM_REPO_NAME:-dastermv2}"
+  dasterm_save_config_value "DASTERM_REPO_BRANCH" "${DASTERM_REPO_BRANCH:-main}"
 
   chmod 600 "$DASTERM_CONFIG"
   dasterm_success "$(dasterm_t config_saved)"
@@ -235,7 +262,7 @@ dasterm_dispatch() {
 
   case "$cmd" in
     shell-init)
-      dasterm_shell_init
+      dasterm_shell_init "$@"
       ;;
 
     telemetry-send)
@@ -308,35 +335,7 @@ dasterm_dispatch() {
       dasterm_telemetry_send_internal doctor
       ;;
 
-    ai)
-      dasterm_load_all
-      dasterm_ai_ask "$*"
-      ;;
 
-    brain-ai)
-      dasterm_load_all
-      dasterm_ai_brain_show
-      ;;
-
-    clear-brain-ai)
-      dasterm_load_all
-      dasterm_ai_brain_clear
-      ;;
-
-    ai-provider)
-      dasterm_load_all
-      dasterm_ai_provider_show
-      ;;
-
-    ai-reset-provider)
-      dasterm_load_all
-      dasterm_ai_provider_reset
-      ;;
-
-    ai-test)
-      dasterm_load_all
-      dasterm_ai_test
-      ;;
 
     config)
       dasterm_config_menu
@@ -363,6 +362,19 @@ dasterm_dispatch() {
       dasterm_kv "Repo" "github.com/akaanakbaik/dastermv2"
       dasterm_kv "Version" "${DASTERM_VERSION:-$DASTERM_VERSION_FALLBACK}"
       dasterm_footer
+      ;;
+
+    watch)
+      dasterm_load_all
+      local mode="${1:-${DASTERM_MODE:-lite}}"
+      local interval="${2:-3}"
+      dasterm_theme_load
+      while true; do
+        dasterm_render_dashboard "$mode"
+        echo
+        printf "%bPress Ctrl+C to exit watch mode. Refreshing every %ss...%b\n" "$D_WARN" "$interval" "$D_NC"
+        sleep "$interval"
+      done
       ;;
 
     *)

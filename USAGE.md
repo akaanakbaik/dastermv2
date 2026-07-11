@@ -20,9 +20,7 @@ Dokumen ini menjelaskan cara menggunakan semua command utama Dasterm.
 - [Services](#10-services)
 - [Security](#11-security)
 - [Doctor](#12-doctor)
-- [AI Assistant](#13-ai-assistant)
-- [AI Memory](#14-ai-memory)
-- [AI Provider](#15-ai-provider)
+
 - [Update](#16-update)
 - [Reconfigure](#17-reconfigure)
 - [Uninstall](#18-uninstall)
@@ -435,94 +433,7 @@ Gunakan command ini jika Dasterm error, tidak muncul saat login, atau ada comman
 
 ---
 
-## 13. AI Assistant
 
-```bash
-/ai <permintaan>
-```
-
-**Contoh:**
-
-```bash
-/ai cek storage server saya
-```
-
-AI akan memberikan jawaban. Jika AI menyarankan command, Dasterm akan meminta persetujuan dulu.
-
-**Contoh:**
-
-```
-AI suggests this command:
-
-dasterm storage
-
-Run this command? [y/N]
-```
-
-Command tidak dijalankan sebelum user menyetujui.
-
----
-
-## 14. AI Memory
-
-**Melihat memori AI:**
-
-```bash
-/brain-ai
-```
-
-**Menghapus memori AI:**
-
-```bash
-/clear-brain-ai
-```
-
-**Memori AI:**
-
-- Disimpan per hari
-- Reset otomatis berdasarkan tanggal WIB
-- Diringkas otomatis jika item lebih dari 5
-- Tidak dimaksudkan untuk menyimpan data sensitif
-
-**File memori:**
-
-```
-~/.cache/dasterm/ai-memory.json
-```
-
----
-
-## 15. AI Provider
-
-**Melihat provider AI aktif:**
-
-```bash
-/ai-provider
-```
-
-**Reset provider AI:**
-
-```bash
-/ai-reset-provider
-```
-
-**Test semua provider AI:**
-
-```bash
-/ai-test
-```
-
-**Provider default:**
-
-```
-1. chocomilk
-2. prexzy copilot
-3. prexzy zai
-```
-
-Jika provider utama timeout/error lebih dari 10 detik, Dasterm memakai fallback. Jika provider utama lambat 3 kali, urutan provider otomatis diputar.
-
----
 
 ## 16. Update
 
@@ -617,7 +528,7 @@ Pilih:
 | Dashboard tidak muncul saat login | `dasterm doctor` |
 | Speedtest tidak tersedia | `dasterm respeedtest` |
 | Error dependency | `sudo apt install curl jq iproute2 procps coreutils util-linux` |
-| AI tidak jalan | `dasterm ai-test` |
+
 | Update gagal | Jalankan installer → pilih `4) Repair` |
 
 ---
@@ -630,6 +541,6 @@ Semua slash command punya bentuk asli.
 |---------------|--------------|
 | `/help` | `dasterm help` |
 | `/respeedtest` | `dasterm respeedtest` |
-| `/ai cek server` | `dasterm ai "cek server"` |
+
 
 Jika slash alias bermasalah, gunakan command `dasterm`.

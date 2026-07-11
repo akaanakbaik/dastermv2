@@ -17,6 +17,7 @@ MARK_BEGIN="### DASTERM_V2_BEGIN ###"
 MARK_END="### DASTERM_V2_END ###"
 VERSION="2.0.0"
 ACTION=""
+AUTO_CONF="off"
 
 G='\033[0;32m'
 R='\033[0;31m'
@@ -241,6 +242,10 @@ ask_yes_no() {
 }
 
 choose_language() {
+  if [ "${AUTO_CONF:-off}" = "on" ]; then
+    DASH_LANG="en"
+    return 0
+  fi
   local x
   line
   say "${B}Choose language / Pilih bahasa${N}"
@@ -342,6 +347,17 @@ ask_userhost() {
 }
 
 wizard() {
+  if [ "${AUTO_CONF:-off}" = "on" ]; then
+    DASH_MODE="lite"
+    DASH_USERHOST="${TARGET_USER}@$(hostname 2>/dev/null || echo linux)"
+    DASH_THEME="pastel"
+    DASH_SHOW="always"
+    DASH_PROMPT="on"
+    DASH_SLASH="on"
+    DASH_SPEED_INIT="on"
+    DASH_TELEMETRY="off"
+    return 0
+  fi
   choose_mode
   ask_userhost
   choose_theme
@@ -444,28 +460,40 @@ download_sources() {
   download_file "bin/dasterm" "$TMP_DIR/bin/dasterm"
 
   local f
-  for f in core.sh i18n.sh render.sh system.sh network.sh speedtest.sh ai.sh update.sh storage.sh security.sh services.sh doctor.sh telemetry.sh; do
+  for f in core.sh i18n.sh render.sh system.sh network.sh speedtest.sh update.sh storage.sh security.sh services.sh doctor.sh telemetry.sh; do
     download_file "lib/${f}" "$TMP_DIR/lib/${f}"
   done
+}
+
+save_config_value() {
+  local key="$1"
+  local value="$2"
+  if [ ! -f "$CONFIG_FILE" ]; then
+    touch "$CONFIG_FILE"
+    chmod 600 "$CONFIG_FILE"
+  fi
+  if grep -q "^${key}=" "$CONFIG_FILE"; then
+    sed -i "s|^${key}=.*|${key}=\"${value}\"|" "$CONFIG_FILE"
+  else
+    printf '%s="%s"\n' "$key" "$value" >> "$CONFIG_FILE"
+  fi
 }
 
 write_config() {
   mkdir -p "$CONFIG_DIR" "$CACHE_DIR" "$LOG_DIR"
 
-  cat > "$CONFIG_FILE" <<EOF
-DASTERM_VERSION="$VERSION"
-DASTERM_LANG="${DASH_LANG:-id}"
-DASTERM_MODE="${DASH_MODE:-lite}"
-DASTERM_THEME="${DASH_THEME:-pastel}"
-DASTERM_USERHOST="${DASH_USERHOST:-${TARGET_USER}@$(hostname 2>/dev/null || echo linux)}"
-DASTERM_SHOW="${DASH_SHOW:-always}"
-DASTERM_PROMPT="${DASH_PROMPT:-on}"
-DASTERM_SLASH="${DASH_SLASH:-on}"
-DASTERM_TELEMETRY="${DASH_TELEMETRY:-off}"
-DASTERM_REPO_OWNER="$REPO_OWNER"
-DASTERM_REPO_NAME="$REPO_NAME"
-DASTERM_REPO_BRANCH="$REPO_BRANCH"
-EOF
+  save_config_value "DASTERM_VERSION" "$VERSION"
+  save_config_value "DASTERM_LANG" "${DASH_LANG:-id}"
+  save_config_value "DASTERM_MODE" "${DASH_MODE:-lite}"
+  save_config_value "DASTERM_THEME" "${DASH_THEME:-pastel}"
+  save_config_value "DASTERM_USERHOST" "${DASH_USERHOST:-${TARGET_USER}@$(hostname 2>/dev/null || echo linux)}"
+  save_config_value "DASTERM_SHOW" "${DASH_SHOW:-always}"
+  save_config_value "DASTERM_PROMPT" "${DASH_PROMPT:-on}"
+  save_config_value "DASTERM_SLASH" "${DASH_SLASH:-on}"
+  save_config_value "DASTERM_TELEMETRY" "${DASH_TELEMETRY:-off}"
+  save_config_value "DASTERM_REPO_OWNER" "$REPO_OWNER"
+  save_config_value "DASTERM_REPO_NAME" "$REPO_NAME"
+  save_config_value "DASTERM_REPO_BRANCH" "$REPO_BRANCH"
 
   chmod 600 "$CONFIG_FILE"
   chown -R "$TARGET_USER":"$TARGET_GROUP" "$CONFIG_DIR" "$CACHE_DIR" "$DATA_DIR" 2>/dev/null || true
@@ -492,32 +520,19 @@ storage:storage
 services:services
 security:security
 doctor:doctor
-ai:ai
-brain-ai:brain-ai
-clear-brain-ai:clear-brain-ai
-ai-provider:ai-provider
-ai-reset-provider:ai-reset-provider
-ai-test:ai-test
 config:config
 update:update
 uninstall:uninstall
 version:version
 about:about
+watch:watch
 EOF
 }
 
 install_slash_commands() {
-  [ "${DASH_SLASH:-on}" = "on" ] || return 0
-
-  local name target
-  while IFS=: read -r name target; do
-    [ -n "$name" ] || continue
-    cat > "/$name" <<SCRIPT
-#!/usr/bin/env bash
-exec /usr/local/bin/dasterm "$target" "\$@"
-SCRIPT
-    chmod 755 "/$name"
-  done < <(slash_command_names)
+  # Slash commands are now dynamically loaded as shell aliases in shell-init.
+  # We clean up any old slash command scripts written to the root directory to follow FHS guidelines.
+  remove_slash_commands
 }
 
 remove_slash_commands() {
@@ -529,11 +544,11 @@ remove_slash_commands() {
 }
 
 inject_shell() {
-  local block
-  block="$(cat <<'EOF'
+  local block_bash block_zsh
+  block_bash="$(cat <<'EOF'
 ### DASTERM_V2_BEGIN ###
 if [ -x /usr/local/bin/dasterm ]; then
-  eval "$(/usr/local/bin/dasterm shell-init 2>/dev/null)"
+  eval "$(/usr/local/bin/dasterm shell-init bash 2>/dev/null)"
   if [ -z "${DASTERM_SESSION_DONE:-}" ] && [ -t 1 ]; then
     export DASTERM_SESSION_DONE=1
     /usr/local/bin/dasterm auto 2>/dev/null || true
@@ -543,13 +558,30 @@ fi
 EOF
 )"
 
-  local rc
-  for rc in "$BASHRC" "$ZSHRC"; do
-    [ -f "$rc" ] || touch "$rc"
-    sed -i "/^${MARK_BEGIN}$/,/^${MARK_END}$/d" "$rc" 2>/dev/null || true
-    printf "\n%s\n" "$block" >> "$rc"
-    chown "$TARGET_USER":"$TARGET_GROUP" "$rc" 2>/dev/null || true
-  done
+  block_zsh="$(cat <<'EOF'
+### DASTERM_V2_BEGIN ###
+if [ -x /usr/local/bin/dasterm ]; then
+  eval "$(/usr/local/bin/dasterm shell-init zsh 2>/dev/null)"
+  if [ -z "${DASTERM_SESSION_DONE:-}" ] && [ -t 1 ]; then
+    export DASTERM_SESSION_DONE=1
+    /usr/local/bin/dasterm auto 2>/dev/null || true
+  fi
+fi
+### DASTERM_V2_END ###
+EOF
+)"
+
+  [ -f "$BASHRC" ] || touch "$BASHRC"
+  sed -i "/^${MARK_BEGIN}$/,/^${MARK_END}$/d" "$BASHRC" 2>/dev/null || true
+  printf "\n%s\n" "$block_bash" >> "$BASHRC"
+  chown "$TARGET_USER":"$TARGET_GROUP" "$BASHRC" 2>/dev/null || true
+
+  if [ -f "$ZSHRC" ] || [ -d "${TARGET_HOME}/.oh-my-zsh" ]; then
+    [ -f "$ZSHRC" ] || touch "$ZSHRC"
+    sed -i "/^${MARK_BEGIN}$/,/^${MARK_END}$/d" "$ZSHRC" 2>/dev/null || true
+    printf "\n%s\n" "$block_zsh" >> "$ZSHRC"
+    chown "$TARGET_USER":"$TARGET_GROUP" "$ZSHRC" 2>/dev/null || true
+  fi
 }
 
 run_initial_speedtest() {
@@ -568,22 +600,33 @@ send_install_telemetry() {
 
 reload_shell_prompt() {
   line
+  if [ "${AUTO_CONF:-off}" = "on" ]; then
+    say "Auto-configuration complete. Please reload your shell: exec \$(basename \$SHELL) -i"
+    return 0
+  fi
 
   if ask_yes_no "$(t reload)" y; then
     ok "Reloading shell display..."
     sleep 1
     clear 2>/dev/null || true
 
+    local user_shell
+    user_shell="$(basename "${SHELL:-bash}")"
+    case "$user_shell" in
+      zsh|bash) ;;
+      *) user_shell="bash" ;;
+    esac
+
     if [ "$TARGET_USER" = "root" ]; then
       cd "$TARGET_HOME" || true
-      exec env HOME="$TARGET_HOME" USER="$TARGET_USER" LOGNAME="$TARGET_USER" bash -i
+      exec env HOME="$TARGET_HOME" USER="$TARGET_USER" LOGNAME="$TARGET_USER" "$user_shell" -i
     else
-      exec sudo -u "$TARGET_USER" -H bash -i
+      exec sudo -u "$TARGET_USER" -H "$user_shell" -i
     fi
   else
     say ""
     say "${B}Manual reload:${N}"
-    say "  exec bash -i"
+    say "  exec \$(basename \$SHELL) -i"
     say "  dasterm"
     say "  /help"
   fi
@@ -704,19 +747,22 @@ EOF
 }
 
 parse_args() {
-  case "${1:-}" in
-    --install|install) ACTION="install" ;;
-    --reconfigure|reconfigure) ACTION="reconfigure" ;;
-    --uninstall|uninstall) ACTION="uninstall" ;;
-    --repair|repair) ACTION="repair" ;;
-    --help|-h|help) usage; exit 0 ;;
-    "") ;;
-    *) err "Unknown argument: $1"; usage; exit 1 ;;
-  esac
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --install|install) ACTION="install" ;;
+      --reconfigure|reconfigure) ACTION="reconfigure" ;;
+      --uninstall|uninstall) ACTION="uninstall" ;;
+      --repair|repair) ACTION="repair" ;;
+      --auto|-y|--yes) AUTO_CONF="on" ;;
+      --help|-h|help) usage; exit 0 ;;
+      *) err "Unknown argument: $1"; usage; exit 1 ;;
+    esac
+    shift
+  done
 }
 
 main() {
-  parse_args "${1:-}"
+  parse_args "$@"
   banner
   detect_user
   load_existing_language

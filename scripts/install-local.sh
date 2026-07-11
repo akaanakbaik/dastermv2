@@ -43,14 +43,13 @@ fi
 chmod 600 "$TARGET_HOME/.config/dasterm/config.env"
 chown -R "$TARGET_USER":"$TARGET_USER" "$TARGET_HOME/.config/dasterm" "$TARGET_HOME/.cache/dasterm" "$TARGET_HOME/.local/share/dasterm" 2>/dev/null || true
 
-for rc in "$TARGET_HOME/.bashrc" "$TARGET_HOME/.zshrc"; do
-  [ -f "$rc" ] || touch "$rc"
-  sed -i "/^### DASTERM_V2_BEGIN ###$/,/^### DASTERM_V2_END ###$/d" "$rc" 2>/dev/null || true
-  cat >> "$rc" <<'EOF'
+[ -f "$TARGET_HOME/.bashrc" ] || touch "$TARGET_HOME/.bashrc"
+sed -i "/^### DASTERM_V2_BEGIN ###$/,/^### DASTERM_V2_END ###$/d" "$TARGET_HOME/.bashrc" 2>/dev/null || true
+cat >> "$TARGET_HOME/.bashrc" <<'EOF'
 
 ### DASTERM_V2_BEGIN ###
 if [ -x /usr/local/bin/dasterm ]; then
-  eval "$(/usr/local/bin/dasterm shell-init 2>/dev/null)"
+  eval "$(/usr/local/bin/dasterm shell-init bash 2>/dev/null)"
   if [ -z "${DASTERM_SESSION_DONE:-}" ] && [ -t 1 ]; then
     export DASTERM_SESSION_DONE=1
     /usr/local/bin/dasterm auto 2>/dev/null || true
@@ -58,8 +57,25 @@ if [ -x /usr/local/bin/dasterm ]; then
 fi
 ### DASTERM_V2_END ###
 EOF
-  chown "$TARGET_USER":"$TARGET_USER" "$rc" 2>/dev/null || true
-done
+chown "$TARGET_USER":"$TARGET_USER" "$TARGET_HOME/.bashrc" 2>/dev/null || true
+
+if [ -f "$TARGET_HOME/.zshrc" ] || [ -d "$TARGET_HOME/.oh-my-zsh" ]; then
+  [ -f "$TARGET_HOME/.zshrc" ] || touch "$TARGET_HOME/.zshrc"
+  sed -i "/^### DASTERM_V2_BEGIN ###$/,/^### DASTERM_V2_END ###$/d" "$TARGET_HOME/.zshrc" 2>/dev/null || true
+  cat >> "$TARGET_HOME/.zshrc" <<'EOF'
+
+### DASTERM_V2_BEGIN ###
+if [ -x /usr/local/bin/dasterm ]; then
+  eval "$(/usr/local/bin/dasterm shell-init zsh 2>/dev/null)"
+  if [ -z "${DASTERM_SESSION_DONE:-}" ] && [ -t 1 ]; then
+    export DASTERM_SESSION_DONE=1
+    /usr/local/bin/dasterm auto 2>/dev/null || true
+  fi
+fi
+### DASTERM_V2_END ###
+EOF
+  chown "$TARGET_USER":"$TARGET_USER" "$TARGET_HOME/.zshrc" 2>/dev/null || true
+fi
 
 echo "Dasterm local install complete."
 echo "Run: source ~/.bashrc"
