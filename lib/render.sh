@@ -83,58 +83,140 @@ dasterm_render_speed_summary() {
 }
 
 dasterm_render_lite() {
-  clear 2>/dev/null || true
-  dasterm_logo_lite
-  dasterm_section "$(dasterm_t dashboard_title)"
-  dasterm_row "User@Host" "${DASTERM_USERHOST:-$(whoami)@$(hostname)}"
-  dasterm_row "OS" "$(dasterm_os)"
-  dasterm_row "Kernel" "$(uname -r 2>/dev/null || echo N/A)"
-  dasterm_row "Uptime" "$(uptime -p 2>/dev/null | sed 's/^up //' || echo N/A)"
-  dasterm_row "Health" "$(dasterm_health_score)"
-  dasterm_row "RAM" "$(dasterm_ram_line)"
-  dasterm_row "Disk /" "$(dasterm_disk_line /)"
-  dasterm_row "IP" "$(dasterm_private_ip)"
-  dasterm_row "Load" "$(dasterm_load_line)"
-  dasterm_render_speed_summary
-  dasterm_footer
+  dasterm_render_side_by_side "lite"
 }
 
 dasterm_render_full() {
+  dasterm_render_side_by_side "full"
+}
+
+dasterm_render_side_by_side() {
+  local mode="$1"
   clear 2>/dev/null || true
-  dasterm_logo_full
-  dasterm_section "$(dasterm_t system)"
-  dasterm_row "User@Host" "${DASTERM_USERHOST:-$(whoami)@$(hostname)}"
-  dasterm_row "OS" "$(dasterm_os)"
-  dasterm_row "Kernel" "$(uname -r 2>/dev/null || echo N/A)"
-  dasterm_row "Architecture" "$(uname -m 2>/dev/null || echo N/A)"
-  dasterm_row "Virtualization" "$(dasterm_virt)"
-  dasterm_row "Boot Time" "$(dasterm_boot_time)"
-  dasterm_row "Uptime" "$(uptime -p 2>/dev/null | sed 's/^up //' || echo N/A)"
-  dasterm_row "Load Average" "$(dasterm_load_line)"
-  dasterm_row "Health" "$(dasterm_health_score)"
-  dasterm_row "CPU Model" "$(dasterm_cpu_model)"
-  dasterm_row "CPU Cores" "$(nproc 2>/dev/null || echo N/A)"
-  dasterm_row "CPU Flags" "$(dasterm_cpu_flags)"
-  dasterm_row "RAM" "$(dasterm_ram_line)"
-  dasterm_row "Swap" "$(dasterm_swap_line)"
-  dasterm_row "Disk Root" "$(dasterm_disk_line /)"
-  [ -d /datas ] && dasterm_row "Disk /datas" "$(dasterm_disk_line /datas)"
-  dasterm_row "GPU" "$(dasterm_gpu)"
-  dasterm_row "Processes" "$(ps -e --no-headers 2>/dev/null | wc -l | awk '{print $1}' || echo N/A)"
-  dasterm_row "Users" "$(who 2>/dev/null | wc -l | awk '{print $1}' || echo N/A)"
-  dasterm_section "$(dasterm_t network)"
-  dasterm_row "Private IP" "$(dasterm_private_ip)"
-  dasterm_row "Public IP" "$(dasterm_public_ip_cached)"
-  dasterm_row "Gateway" "$(dasterm_gateway)"
-  dasterm_row "DNS" "$(dasterm_dns)"
-  dasterm_render_speed_summary
-  dasterm_section "$(dasterm_t services)"
-  dasterm_row "Docker" "$(dasterm_service_state docker)"
-  dasterm_row "Nginx" "$(dasterm_service_state nginx)"
-  dasterm_row "Apache" "$(dasterm_service_state apache2)"
-  dasterm_row "Cloudflared" "$(dasterm_service_state cloudflared)"
-  dasterm_row "SSH" "$(dasterm_service_state ssh)"
-  dasterm_row "UFW" "$(dasterm_ufw_state)"
+
+  # 1. Capture logo lines
+  local logo_lines=()
+  local line
+  if dasterm_has neofetch; then
+    while IFS= read -r line; do
+      logo_lines+=("$line")
+    done < <(neofetch -L 2>/dev/null)
+  elif dasterm_has fastfetch; then
+    while IFS= read -r line; do
+      logo_lines+=("$line")
+    done < <(fastfetch --logo-only 2>/dev/null)
+  fi
+
+  # Fallback logo if none found or empty
+  if [ ${#logo_lines[@]} -eq 0 ]; then
+    logo_lines=(
+      "  ____            _                     "
+      " |  _ \  __ _ ___| |_ ___ _ __ _ __ ___  "
+      " | | | |/ _\` / __| __/ _ \ '__| '_ \` _ \ "
+      " | |_| | (_| \__ \ ||  __/ |  | | | | | |"
+      " |____/ \__,_|___/\__\___|_|  |_| |_| |_|"
+      "                                        "
+    )
+  fi
+
+  # 2. Capture info lines based on mode
+  local info_lines=()
+  if [ "$mode" = "full" ]; then
+    while IFS= read -r line; do
+      info_lines+=("$line")
+    done < <(
+      dasterm_section "$(dasterm_t system)"
+      dasterm_row "User@Host" "${DASTERM_USERHOST:-$(whoami)@$(hostname)}"
+      dasterm_row "OS" "$(dasterm_os)"
+      dasterm_row "Kernel" "$(uname -r 2>/dev/null || echo N/A)"
+      dasterm_row "Architecture" "$(uname -m 2>/dev/null || echo N/A)"
+      dasterm_row "Virtualization" "$(dasterm_virt)"
+      dasterm_row "Boot Time" "$(dasterm_boot_time)"
+      dasterm_row "Uptime" "$(uptime -p 2>/dev/null | sed 's/^up //' || echo N/A)"
+      dasterm_row "Load Average" "$(dasterm_load_line)"
+      dasterm_row "Health" "$(dasterm_health_score)"
+      dasterm_row "CPU Model" "$(dasterm_cpu_model)"
+      dasterm_row "CPU Cores" "$(nproc 2>/dev/null || echo N/A)"
+      dasterm_row "CPU Flags" "$(dasterm_cpu_flags)"
+      dasterm_row "RAM" "$(dasterm_ram_line)"
+      dasterm_row "Swap" "$(dasterm_swap_line)"
+      dasterm_row "Disk Root" "$(dasterm_disk_line /)"
+      [ -d /datas ] && dasterm_row "Disk /datas" "$(dasterm_disk_line /datas)"
+      dasterm_row "GPU" "$(dasterm_gpu)"
+      dasterm_row "Processes" "$(ps -e --no-headers 2>/dev/null | wc -l | awk '{print $1}' || echo N/A)"
+      dasterm_row "Users" "$(who 2>/dev/null | wc -l | awk '{print $1}' || echo N/A)"
+      dasterm_section "$(dasterm_t network)"
+      dasterm_row "Private IP" "$(dasterm_private_ip)"
+      dasterm_row "Public IP" "$(dasterm_public_ip_cached)"
+      dasterm_row "Gateway" "$(dasterm_gateway)"
+      dasterm_row "DNS" "$(dasterm_dns)"
+      dasterm_render_speed_summary
+      dasterm_section "$(dasterm_t services)"
+      dasterm_row "Docker" "$(dasterm_service_state docker)"
+      dasterm_row "Nginx" "$(dasterm_service_state nginx)"
+      dasterm_row "Apache" "$(dasterm_service_state apache2)"
+      dasterm_row "Cloudflared" "$(dasterm_service_state cloudflared)"
+      dasterm_row "SSH" "$(dasterm_service_state ssh)"
+      dasterm_row "UFW" "$(dasterm_ufw_state)"
+    )
+  else
+    while IFS= read -r line; do
+      info_lines+=("$line")
+    done < <(
+      dasterm_section "$(dasterm_t dashboard_title)"
+      dasterm_row "User@Host" "${DASTERM_USERHOST:-$(whoami)@$(hostname)}"
+      dasterm_row "OS" "$(dasterm_os)"
+      dasterm_row "Kernel" "$(uname -r 2>/dev/null || echo N/A)"
+      dasterm_row "Uptime" "$(uptime -p 2>/dev/null | sed 's/^up //' || echo N/A)"
+      dasterm_row "Health" "$(dasterm_health_score)"
+      dasterm_row "RAM" "$(dasterm_ram_line)"
+      dasterm_row "Disk /" "$(dasterm_disk_line /)"
+      dasterm_row "IP" "$(dasterm_private_ip)"
+      dasterm_row "Load" "$(dasterm_load_line)"
+      dasterm_render_speed_summary
+    )
+  fi
+
+  # Calculate maximum visible length of logo lines (strip ANSI colors)
+  local max_logo_len=0
+  local logo_line
+  for logo_line in "${logo_lines[@]}"; do
+    local visible_line
+    visible_line=$(echo "$logo_line" | sed "s/$(printf '\033')\\[[0-9;]*m//g")
+    if [ ${#visible_line} -gt $max_logo_len ]; then
+      max_logo_len=${#visible_line}
+    fi
+  done
+
+  # Print side-by-side
+  local i=0
+  local logo_count=${#logo_lines[@]}
+  local info_count=${#info_lines[@]}
+  local max_lines=$(( logo_count > info_count ? logo_count : info_count ))
+
+  for ((i=0; i<max_lines; i++)); do
+    local l_val=""
+    local r_val=""
+    local vis_l=""
+
+    if [ $i -lt $logo_count ]; then
+      l_val="${logo_lines[$i]}"
+      vis_l=$(echo "$l_val" | sed "s/$(printf '\033')\\[[0-9;]*m//g")
+    fi
+
+    if [ $i -lt $info_count ]; then
+      r_val="${info_lines[$i]}"
+    fi
+
+    # Pad the logo line
+    local pad_len=$(( max_logo_len - ${#vis_l} ))
+    local pad=""
+    [ $pad_len -gt 0 ] && pad=$(printf "%${pad_len}s" "")
+
+    # Print
+    printf "%s%s   %s\n" "$l_val" "$pad" "$r_val"
+  done
+
   dasterm_footer
 }
 
@@ -142,8 +224,5 @@ dasterm_render_dashboard() {
   dasterm_load_config
   dasterm_theme_load
   local mode="${1:-${DASTERM_MODE:-lite}}"
-  case "$mode" in
-    full) dasterm_render_full ;;
-    *) dasterm_render_lite ;;
-  esac
+  dasterm_render_side_by_side "$mode"
 }
