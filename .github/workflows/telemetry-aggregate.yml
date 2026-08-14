@@ -166,4 +166,14 @@ jobs:
 
           git commit -m "chore: update telemetry stats"
 
-          git push
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 3 ]; then
+              sleep "$((attempt * 5))"
+            fi
+          done
+
+          exit 1
