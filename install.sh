@@ -15,7 +15,7 @@ SHARE_DIR="${PREFIX}/share/dasterm"
 LIB_DIR="${SHARE_DIR}/lib"
 MARK_BEGIN="### DASTERM_V2_BEGIN ###"
 MARK_END="### DASTERM_V2_END ###"
-VERSION="2.0.1"
+VERSION="2.0.2"
 ACTION=""
 AUTO_CONF="off"
 
@@ -473,7 +473,7 @@ download_sources() {
   download_file "bin/dasterm" "$TMP_DIR/bin/dasterm"
 
   local f
-  for f in core.sh i18n.sh render.sh system.sh network.sh speedtest.sh update.sh storage.sh security.sh services.sh doctor.sh telemetry.sh; do
+  for f in core.sh i18n.sh ui.sh render.sh system.sh network.sh speedtest.sh ai.sh update.sh storage.sh security.sh services.sh doctor.sh telemetry.sh; do
     download_file "lib/${f}" "$TMP_DIR/lib/${f}"
   done
 }
@@ -531,6 +531,8 @@ install_files() {
 slash_command_names() {
   cat <<'EOF'
 help:help
+menu:menu
+ai:ai
 status:status
 lite:lite
 full:full

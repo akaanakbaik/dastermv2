@@ -172,7 +172,7 @@ class Runtime(unittest.TestCase):
                  'if dasterm_update_download "$HOME/broken"; then exit 1; fi')
 
     def test_config_dialog_and_auto_manual(self):
-        self.shell('bash bin/dasterm config', input='2\n2\n4\ncustom@host\nmanual\noff\noff\noff\n')
+        self.shell('bash bin/dasterm config', input='2\n2\n4\ncustom@host\nmanual\noff\noff\noff\ny\n')
         config = (self.home / '.config/dasterm/config.env').read_text()
         self.assertIn('DASTERM_MODE=full', config)
         self.assertIn('DASTERM_LANG=en', config)
@@ -194,10 +194,16 @@ class Runtime(unittest.TestCase):
     def test_watch_valid_interval_refreshes(self):
         result = self.shell('timeout 1 bash bin/dasterm watch lite 0.1', ok=False)
         self.assertEqual(result.returncode, 124)
-        self.assertIn('Refreshing every 0.1s', result.stdout)
+        self.assertIn('0.1s', result.stdout)
 
     def test_installer_help_without_privileges(self):
         self.shell('bash install.sh --help')
+
+    def test_running_version_ignores_stale_config_version(self):
+        self.shell('bash bin/dasterm version')
+        with (self.home / '.config/dasterm/config.env').open('a') as f:
+            f.write('DASTERM_VERSION="0.0.1"\n')
+        self.assertEqual(self.shell('bash bin/dasterm version').stdout.strip(), (ROOT / 'VERSION').read_text().strip())
 
     def test_user_install_repeat_and_uninstall_preserves_shell_content(self):
         (self.home / '.bashrc').write_text('# keep my settings\n')

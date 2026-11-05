@@ -1,5 +1,8 @@
 # Dasterm v2 Architecture
 
+> AI changed in v2.0.2: [AI.md](AI.md) is the current contract.
+> Older provider-order, daily-memory, and AI test-command notes below are historical and no longer apply.
+
 Dokumen ini menjelaskan arsitektur Dasterm v2.
 
 ---

@@ -17,7 +17,7 @@ dasterm_telemetry_payload() {
   local event="$1"
   jq -n \
     --arg event "$event" \
-    --arg version "${DASTERM_VERSION:-2.0.1}" \
+    --arg version "${DASTERM_VERSION:-2.0.2}" \
     --arg distro "$(dasterm_os_id)" \
     --arg distro_version "$(dasterm_os_version)" \
     --arg arch "$(uname -m 2>/dev/null || echo unknown)" \

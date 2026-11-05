@@ -4,7 +4,7 @@ IFS=$' \t\n'
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="$(tr -d '[:space:]' < "$ROOT_DIR/VERSION")"
-VERSION="${VERSION:-2.0.1}"
+VERSION="${VERSION:-2.0.2}"
 DIST_DIR="$ROOT_DIR/dist"
 PKG_NAME="dasterm-v${VERSION}"
 PKG_DIR="$DIST_DIR/$PKG_NAME"

@@ -17,6 +17,13 @@ for pass in 1 2; do
     echo "PASS $pass $cmd"
   done
 done
+bash bin/dasterm ai --help >/tmp/dasterm-output
+printf 'invalid\n0\n' | bash bin/dasterm menu >/tmp/dasterm-output 2>/tmp/dasterm-errors
+printf '/exit\n' | bash bin/dasterm ai chat >/tmp/dasterm-output 2>/tmp/dasterm-errors
+if bash bin/dasterm ai 'offline test' >/tmp/dasterm-output 2>/tmp/dasterm-errors; then
+  echo 'AI should fail when offline'; exit 1
+fi
+echo 'PASS offline AI and menu'
 export USER=root
 unset SUDO_USER
 for action in install reconfigure repair install; do
@@ -24,7 +31,7 @@ for action in install reconfigure repair install; do
     cat /tmp/dasterm-install-output; exit 1;
   }
   /usr/local/bin/dasterm version
-  bash -c 'eval "$(/usr/local/bin/dasterm shell-init bash)"; /version'
+  bash -c 'eval "$(/usr/local/bin/dasterm shell-init bash)"; /version; /ai --help >/dev/null'
   test "$(grep -c '^### DASTERM_V2_BEGIN ###$' /root/.bashrc)" = 1
   echo "PASS lifecycle $action"
 done

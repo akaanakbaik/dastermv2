@@ -1,5 +1,8 @@
 # Dasterm v2 FAQ
 
+> AI changed in v2.0.2: [AI.md](AI.md) is the current contract.
+> Older provider-order, daily-memory, and AI test-command notes below are historical and no longer apply.
+
 Pertanyaan yang sering muncul tentang Dasterm v2.
 
 ---

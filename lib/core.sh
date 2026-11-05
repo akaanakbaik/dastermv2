@@ -1,4 +1,4 @@
-DASTERM_VERSION="${DASTERM_VERSION:-2.0.1}"
+DASTERM_VERSION="${DASTERM_VERSION:-2.0.2}"
 DASTERM_CONFIG_DIR="${DASTERM_CONFIG_DIR:-$HOME/.config/dasterm}"
 DASTERM_CACHE_DIR="${DASTERM_CACHE_DIR:-$HOME/.cache/dasterm}"
 DASTERM_DATA_DIR="${DASTERM_DATA_DIR:-$HOME/.local/share/dasterm}"
@@ -32,9 +32,22 @@ dasterm_is_tty() {
 
 dasterm_cols() {
   local c
-  c="$(tput cols 2>/dev/null || echo 80)"
-  [ "$c" -lt 40 ] && c=40
+  c="${COLUMNS:-}"
+  [[ "$c" =~ ^[0-9]{1,4}$ ]] || c="$(tput cols 2>/dev/null || true)"
+  [[ "$c" =~ ^[0-9]{1,4}$ ]] || c=80
+  c=$((10#$c))
+  [ "$c" -lt 24 ] && c=24
+  [ "$c" -gt 100 ] && c=100
   echo "$c"
+}
+
+dasterm_rule() {
+  local width char i
+  width="$(dasterm_cols)"
+  char='─'
+  if [ "${DASTERM_ASCII:-0}" = 1 ] || [ "${LC_ALL:-${LC_CTYPE:-${LANG:-}}}" = C ]; then char='-'; fi
+  for ((i=0; i<width; i++)); do printf '%s' "$char"; done
+  printf '\n'
 }
 
 dasterm_timeout() {
@@ -68,12 +81,14 @@ dasterm_percent() {
 dasterm_bar() {
   local percent="${1:-0}"
   local width="${2:-18}"
-  awk -v p="$percent" -v w="$width" 'BEGIN{
+  local filled='█' empty='░'
+  if [ "${DASTERM_ASCII:-0}" = 1 ] || [ "${LC_ALL:-${LC_CTYPE:-${LANG:-}}}" = C ]; then filled='#'; empty='-'; fi
+  awk -v p="$percent" -v w="$width" -v filled="$filled" -v empty="$empty" 'BEGIN{
     if(p<0)p=0;if(p>100)p=100;
     f=int((p/100)*w);
     printf "[";
-    for(i=0;i<f;i++)printf "█";
-    for(i=f;i<w;i++)printf "░";
+    for(i=0;i<f;i++)printf "%s", filled;
+    for(i=f;i<w;i++)printf "%s", empty;
     printf "] %.1f%%", p;
   }'
 }
@@ -108,8 +123,10 @@ dasterm_urlencode() {
 }
 
 dasterm_load_config() {
+  local running_version="$DASTERM_VERSION"
   dasterm_mkdirs
   [ -f "$DASTERM_CONFIG" ] && . "$DASTERM_CONFIG"
+  DASTERM_VERSION="$running_version"
 }
 
 dasterm_save_config_value() {
@@ -128,6 +145,20 @@ dasterm_save_config_value() {
   printf '%s=%s\n' "$key" "$escaped" >> "$tmp"
   chmod 600 "$tmp"
   mv -f "$tmp" "$DASTERM_CONFIG"
+}
+
+dasterm_save_config_batch() {
+  local original="$DASTERM_CONFIG" staged
+  [ "$(( $# % 2 ))" -eq 0 ] || return 1
+  dasterm_mkdirs || return 1
+  staged="$(mktemp "${DASTERM_CONFIG}.XXXXXX")" || return 1
+  if [ -f "$original" ] && ! cp "$original" "$staged"; then rm -f "$staged"; return 1; fi
+  local DASTERM_CONFIG="$staged"
+  while [ "$#" -gt 0 ]; do
+    if ! dasterm_save_config_value "$1" "$2"; then rm -f "$staged"; return 1; fi
+    shift 2
+  done
+  if ! mv -f "$staged" "$original"; then rm -f "$staged"; return 1; fi
 }
 
 dasterm_theme_load() {
@@ -162,7 +193,7 @@ dasterm_theme_load() {
   D_ERR='\033[0;31m'
   D_BOLD='\033[1m'
   D_NC='\033[0m'
-  if [ -n "${NO_COLOR:-}" ] || ! dasterm_is_tty; then
+  if [ -n "${NO_COLOR:-}" ] || [ "${TERM:-dumb}" = dumb ] || ! dasterm_is_tty; then
     # shellcheck disable=SC2034
     D_C1='' D_C2='' D_C3='' D_C4='' D_OK='' D_WARN='' D_ERR='' D_BOLD='' D_NC=''
   fi
@@ -172,14 +203,20 @@ dasterm_title() {
   dasterm_theme_load
   local title="$1"
   printf "%b\n" "${D_BOLD}${D_C2}${title}${D_NC}"
-  printf "%b\n" "${D_C2}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${D_NC}"
+  printf '%b' "$D_C2"
+  dasterm_rule
+  printf '%b' "$D_NC"
 }
 
 dasterm_kv() {
   dasterm_theme_load
   local k="$1"
   local v="$2"
-  printf "%b%-18s%b : %s\n" "$D_C1" "$k" "$D_NC" "$v"
+  if [ "$(dasterm_cols)" -lt 60 ]; then
+    printf '%b%s%b\n  %s\n' "$D_C1" "$k" "$D_NC" "$v"
+  else
+    printf "%b%-18s%b : %s\n" "$D_C1" "$k" "$D_NC" "$v"
+  fi
 }
 
 dasterm_success() {
@@ -204,7 +241,9 @@ dasterm_info() {
 
 dasterm_footer() {
   dasterm_theme_load
-  printf "%b\n" "${D_C2}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${D_NC}"
+  printf '%b' "$D_C2"
+  dasterm_rule
+  printf '%b' "$D_NC"
   printf "%b\n" "$(dasterm_t footer_tip)"
 }
 

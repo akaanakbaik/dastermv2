@@ -1,4 +1,27 @@
-# Verification snapshot — 2026-11-05
+# Verification snapshots — 2026-11-05
+
+## v2.0.2 — AI and terminal UX
+
+| Check | Result |
+| --- | --- |
+| `make test`: Bash syntax, full ShellCheck, behavior regressions | PASS; 40 Python tests, no skips in the full environment |
+| Worker `npm test`, actual SQLite schema | PASS; 3 tests |
+| Ubuntu 22.04/24.04, Debian 12, Rocky Linux 9, Alpine 3.22 | PASS; repeated commands, offline AI/menu, install/reconfigure/repair/reinstall/uninstall |
+| Real Prexzy endpoint | PASS; `hii`, CLI question, and Unicode/special-character question returned answers |
+| Local HTTPS through real curl | PASS; encoding, schema, HTTP/TLS errors, response limits, SIGINT cleanup, chat context/retry |
+| Terminal PTY | PASS; menu/chat exit, watch mode toggle/quit, restored echo/canonical input |
+| Configuration | PASS; invalid-choice retry, cancellation/EOF, confirmation, staging-failure preservation |
+| Layout | PASS; 24/40/80/160 columns, invalid widths, Unicode integrity, redirected output |
+
+The verified provider response reported `qwen3.5-397b-a17b`; AskGPT5 is the
+service name, not an assertion that the model is GPT-5. Live availability can
+change. CI uses a local HTTPS fixture and does not consume the public AI API.
+
+Previous portability fixtures and worker tests remain part of the suite. Real
+disk partitioning/hypervisor boots and all unsupported OS platforms remain outside
+this evidence. See [AI](AI.md), [UI/UX](UI-UX.md), and [compatibility](COMPATIBILITY.md).
+
+## v2.0.1 — portability baseline
 
 Version: 2.0.1. These are local execution results, not a claim that remote CI or
 every VPS platform has passed.

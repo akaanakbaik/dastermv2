@@ -1,5 +1,19 @@
 # Changelog
 
+## v2.0.2
+
+- Restore AI using the supplied Prexzy AskGPT5 endpoint, with correctly encoded
+  GET prompts, real provider model labels, direct/stdin questions, and session chat.
+- Add explicit retry, clear, help, and exit controls; retain one successful turn
+  in memory without chat files, server-data collection, or automatic command execution.
+- Enforce HTTPS, deadlines, prompt/response limits, strict response validation,
+  safe terminal text, and actionable transport/HTTP/provider errors.
+- Add a numbered home menu, compact responsive dashboard, resource bars,
+  optional legacy logos, and single-key watch navigation.
+- Validate configuration input, allow cancellation, review before saving, and
+  stage all settings before an atomic replacement.
+- Expand regressions with real local HTTPS transport tests and PTY interactions.
+
 ## v2.0.1
 
 - Discover mounted filesystems dynamically instead of assuming `/datas`.

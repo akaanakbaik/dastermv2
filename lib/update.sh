@@ -19,7 +19,7 @@ dasterm_update_download() {
   curl --connect-timeout 5 --max-time 30 -fsSL "${base}/bin/dasterm" -o "$tmp/bin/dasterm" || return 1
   bash -n "$tmp/bin/dasterm" || return 1
   local f
-  for f in core.sh i18n.sh render.sh system.sh network.sh speedtest.sh update.sh storage.sh security.sh services.sh doctor.sh telemetry.sh; do
+  for f in core.sh i18n.sh ui.sh render.sh system.sh network.sh speedtest.sh ai.sh update.sh storage.sh security.sh services.sh doctor.sh telemetry.sh; do
     curl --connect-timeout 5 --max-time 30 -fsSL "${base}/lib/${f}" -o "$tmp/lib/${f}" || return 1
     bash -n "$tmp/lib/${f}" || return 1
   done
@@ -51,7 +51,7 @@ dasterm_update_changelog() {
 
 dasterm_update_run() {
   local current latest tmp changelog
-  current="${DASTERM_VERSION:-2.0.1}"
+  current="${DASTERM_VERSION:-2.0.2}"
   if ! latest="$(dasterm_update_latest_version)"; then
     dasterm_error "Cannot determine latest version: network unavailable or invalid VERSION."
     return 1

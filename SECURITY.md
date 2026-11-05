@@ -1,5 +1,8 @@
 # Security Policy
 
+> AI changed in v2.0.2: [docs/AI.md](docs/AI.md) is the current contract.
+> Older provider-order, daily-memory, and AI test-command notes below are historical and no longer apply.
+
 Dokumen ini menjelaskan cara melaporkan masalah keamanan di Dasterm v2.
 
 ---

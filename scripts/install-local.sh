@@ -62,7 +62,7 @@ mkdir -p "$TARGET_HOME/.config/dasterm" "$TARGET_HOME/.cache/dasterm" "$TARGET_H
 
 if [ ! -f "$TARGET_HOME/.config/dasterm/config.env" ]; then
   cat > "$TARGET_HOME/.config/dasterm/config.env" <<EOF
-DASTERM_VERSION="2.0.1"
+DASTERM_VERSION="2.0.2"
 DASTERM_LANG="id"
 DASTERM_MODE="lite"
 DASTERM_THEME="pastel"

@@ -126,7 +126,7 @@ dasterm_doctor_show() {
   dasterm_theme_load
   dasterm_title "$(dasterm_t doctor_title)"
   dasterm_kv "Doctor Score" "$(dasterm_doctor_summary_score)"
-  dasterm_kv "Dasterm Version" "${DASTERM_VERSION:-2.0.1}"
+  dasterm_kv "Dasterm Version" "${DASTERM_VERSION:-2.0.2}"
   dasterm_kv "Language" "${DASTERM_LANG:-id}"
   dasterm_kv "Mode" "${DASTERM_MODE:-lite}"
   dasterm_kv "Theme" "${DASTERM_THEME:-pastel}"

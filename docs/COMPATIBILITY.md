@@ -1,6 +1,6 @@
 # Compatibility and verification
 
-Dasterm 2.0.1 targets Linux with Bash. Detection follows available capabilities,
+Dasterm 2.0.2 targets Linux with Bash. Detection follows available capabilities,
 not distro versions, CPU architectures, hypervisor vendors, or fixed disk names.
 Universal support for every OS/version cannot be guaranteed. Native Windows,
 macOS, BSD, and systems without Bash are outside the system installer's scope.
@@ -32,6 +32,8 @@ WSL should use its Linux environment.
 - External operations use `timeout` or `gtimeout`. Without either, bounded
   operations are skipped rather than started without a time limit. Most dashboard
   features work without jq; speedtests require jq and explain when it is missing.
+- AI uses curl's own deadlines and therefore does not require GNU timeout.
+  It requires curl/jq and HTTPS. See [AI contract](AI.md) and [terminal UI](UI-UX.md).
 - Package installation supports apt, dnf, yum, pacman, zypper, and apk. Arch uses
   `pacman -S`, avoiding a database-only refresh and partial upgrade. Package
   repository availability and EOL operating systems remain operator concerns.
@@ -66,6 +68,10 @@ syntax validation, and telemetry opt-in/opt-out.
 Worker tests use the repository's actual SQL schema via Node SQLite, exercising
 event storage, stats, every documented badge, validation, methods, missing routes,
 machine rate limiting, and expired rate-limit buckets.
+
+The AI/UI tests use real curl against a locally trusted HTTPS server and run
+PTY sessions for key navigation. CI installs curl, jq, and openssl for these
+tests. They never call the public AI provider. See [test results](TEST-RESULTS.md).
 
 ## Limits of the evidence
 

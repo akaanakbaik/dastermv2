@@ -23,7 +23,7 @@ DASTERM_CACHE_DIR="${XDG_CACHE_HOME:-$DASTERM_HOME/.cache}/dasterm"
 DASTERM_DATA_DIR="${XDG_DATA_HOME:-$DASTERM_HOME/.local/share}/dasterm"
 DASTERM_LOG_DIR="${DASTERM_DATA_DIR}/logs"
 DASTERM_CONFIG="${DASTERM_CONFIG_DIR}/config.env"
-DASTERM_VERSION_FALLBACK="2.0.1"
+DASTERM_VERSION_FALLBACK="2.0.2"
 
 if [ ! -r "$DASTERM_LIB/core.sh" ] || [ ! -r "$DASTERM_LIB/i18n.sh" ]; then
   printf 'Dasterm: missing libraries at %s; reinstall or set DASTERM_PREFIX.\n' "$DASTERM_LIB" >&2
@@ -60,9 +60,11 @@ dasterm_load_all() {
   if [ -f "$DASTERM_CONFIG" ]; then
     . "$DASTERM_CONFIG"
   fi
+  # The installed code, not a stale user preference, determines this version.
+  DASTERM_VERSION="$DASTERM_VERSION_FALLBACK"
 
   local f
-  for f in render system network speedtest update storage security services doctor telemetry; do
+  for f in ui render system network speedtest ai update storage security services doctor telemetry; do
     if [ -f "${DASTERM_LIB}/${f}.sh" ]; then
       . "${DASTERM_LIB}/${f}.sh"
     fi
@@ -100,6 +102,8 @@ dasterm_shell_init() {
       printf 'function /%s { %q %q "$@"; }\n' "$name" "$DASTERM_BINARY" "$target"
     done <<'EOF'
 help:help
+menu:menu
+ai:ai
 status:status
 lite:lite
 full:full
@@ -123,6 +127,8 @@ EOF
 dasterm_help() {
   dasterm_load_all
   dasterm_title "$(dasterm_t help_title)"
+  dasterm_kv "/menu" "$(dasterm_t help_menu)"
+  dasterm_kv '/ai [prompt]' "$(dasterm_t help_ai)"
   dasterm_kv "/help" "$(dasterm_t help_help)"
   dasterm_kv "/status" "$(dasterm_t help_status)"
   dasterm_kv "/lite" "$(dasterm_t help_lite)"
@@ -144,6 +150,17 @@ dasterm_help() {
 }
 
 dasterm_config_menu() {
+  local rc
+  dasterm_config_edit
+  rc=$?
+  if [ "$rc" -eq 2 ]; then
+    dasterm_info "$(dasterm_t config_cancelled)"
+    return 0
+  fi
+  return "$rc"
+}
+
+dasterm_config_edit() {
   dasterm_load_all
 
   local lang mode theme show prompt slash telemetry uh ans
@@ -156,73 +173,84 @@ dasterm_config_menu() {
   telemetry="${DASTERM_TELEMETRY:-off}"
   uh="${DASTERM_USERHOST:-$(whoami)@$(hostname 2>/dev/null || echo linux)}"
 
-  dasterm_title "$(dasterm_t config_title)"
+  dasterm_ui_banner "$(dasterm_t config_title)" "$(dasterm_t config_hint)"
 
   echo "1) Indonesia"
   echo "2) English"
-  read -r -p "Language [${lang}]: " ans
+  dasterm_ui_read ans "Language / Bahasa" "$lang" 1 2 id en || return $?
   case "${ans:-}" in
-    1) lang="id" ;;
-    2) lang="en" ;;
+    1|id) lang="id" ;;
+    2|en) lang="en" ;;
   esac
 
   echo "1) Lite"
   echo "2) Full"
-  read -r -p "Mode [${mode}]: " ans
+  dasterm_ui_read ans "Mode" "$mode" 1 2 lite full || return $?
   case "${ans:-}" in
-    1) mode="lite" ;;
-    2) mode="full" ;;
+    1|lite) mode="lite" ;;
+    2|full) mode="full" ;;
   esac
 
   echo "1) Pastel"
   echo "2) Cyber"
   echo "3) Ocean"
   echo "4) Mono"
-  read -r -p "Theme [${theme}]: " ans
+  dasterm_ui_read ans "Theme / Tema" "$theme" 1 2 3 4 pastel cyber ocean mono || return $?
   case "${ans:-}" in
-    1) theme="pastel" ;;
-    2) theme="cyber" ;;
-    3) theme="ocean" ;;
-    4) theme="mono" ;;
+    1|pastel) theme="pastel" ;;
+    2|cyber) theme="cyber" ;;
+    3|ocean) theme="ocean" ;;
+    4|mono) theme="mono" ;;
   esac
 
-  read -r -p "User@Host [${uh}]: " ans
+  dasterm_ui_read ans "User@Host" "$uh" || return $?
   [ -n "${ans:-}" ] && uh="$ans"
 
-  read -r -p "Show dashboard every login? [${show}] always/manual: " ans
+  dasterm_ui_read ans "Startup (always/manual)" "$show" always manual || return $?
   case "${ans:-}" in
     always|manual) show="$ans" ;;
   esac
 
-  read -r -p "Change prompt? [${prompt}] on/off: " ans
+  dasterm_ui_read ans "Prompt (on/off)" "$prompt" on off || return $?
   case "${ans:-}" in
     on|off) prompt="$ans" ;;
   esac
 
-  read -r -p "Enable slash commands? [${slash}] on/off: " ans
+  dasterm_ui_read ans "Slash commands (on/off)" "$slash" on off || return $?
   case "${ans:-}" in
     on|off) slash="$ans" ;;
   esac
 
-  read -r -p "Anonymous telemetry? [${telemetry}] on/off: " ans
+  dasterm_ui_read ans "Telemetry (on/off)" "$telemetry" on off || return $?
   case "${ans:-}" in
     on|off) telemetry="$ans" ;;
   esac
 
+  printf '\n'
+  dasterm_title "$(dasterm_t config_title)"
+  dasterm_kv "Language / Mode" "$lang / $mode"
+  dasterm_kv "Theme / Startup" "$theme / $show"
+  dasterm_kv "User@Host" "$uh"
+  dasterm_kv "Prompt / Slash" "$prompt / $slash"
+  dasterm_kv "Telemetry" "$telemetry"
+  dasterm_ui_read ans "$(dasterm_t save_changes)" y y n || return $?
+  if [ "$ans" = n ]; then dasterm_info "$(dasterm_t config_cancelled)"; return 0; fi
+
   mkdir -p "$DASTERM_CONFIG_DIR"
 
-  dasterm_save_config_value "DASTERM_VERSION" "${DASTERM_VERSION:-$DASTERM_VERSION_FALLBACK}"
-  dasterm_save_config_value "DASTERM_LANG" "$lang"
-  dasterm_save_config_value "DASTERM_MODE" "$mode"
-  dasterm_save_config_value "DASTERM_THEME" "$theme"
-  dasterm_save_config_value "DASTERM_USERHOST" "$uh"
-  dasterm_save_config_value "DASTERM_SHOW" "$show"
-  dasterm_save_config_value "DASTERM_PROMPT" "$prompt"
-  dasterm_save_config_value "DASTERM_SLASH" "$slash"
-  dasterm_save_config_value "DASTERM_TELEMETRY" "$telemetry"
-  dasterm_save_config_value "DASTERM_REPO_OWNER" "${DASTERM_REPO_OWNER:-akaanakbaik}"
-  dasterm_save_config_value "DASTERM_REPO_NAME" "${DASTERM_REPO_NAME:-dastermv2}"
-  dasterm_save_config_value "DASTERM_REPO_BRANCH" "${DASTERM_REPO_BRANCH:-main}"
+  dasterm_save_config_batch \
+    "DASTERM_VERSION" "${DASTERM_VERSION:-$DASTERM_VERSION_FALLBACK}" \
+    "DASTERM_LANG" "$lang" \
+    "DASTERM_MODE" "$mode" \
+    "DASTERM_THEME" "$theme" \
+    "DASTERM_USERHOST" "$uh" \
+    "DASTERM_SHOW" "$show" \
+    "DASTERM_PROMPT" "$prompt" \
+    "DASTERM_SLASH" "$slash" \
+    "DASTERM_TELEMETRY" "$telemetry" \
+    "DASTERM_REPO_OWNER" "${DASTERM_REPO_OWNER:-akaanakbaik}" \
+    "DASTERM_REPO_NAME" "${DASTERM_REPO_NAME:-dastermv2}" \
+    "DASTERM_REPO_BRANCH" "${DASTERM_REPO_BRANCH:-main}" || return 1
 
   chmod 600 "$DASTERM_CONFIG"
   dasterm_success "$(dasterm_t config_saved)"
@@ -334,6 +362,16 @@ dasterm_dispatch() {
       dasterm_help
       ;;
 
+    menu)
+      dasterm_load_all
+      dasterm_menu
+      ;;
+
+    ai)
+      dasterm_load_all
+      dasterm_ai_run "$@"
+      ;;
+
     speedtest)
       dasterm_load_all
       dasterm_speedtest_show
@@ -402,20 +440,7 @@ dasterm_dispatch() {
 
     watch)
       dasterm_load_all
-      local mode="${1:-${DASTERM_MODE:-lite}}"
-      local interval="${2:-3}"
-      case "$mode" in lite|full) ;; *) dasterm_error "Mode must be lite or full"; return 1 ;; esac
-      if ! [[ "$interval" =~ ^[0-9]+([.][0-9]+)?$ ]] || ! awk -v n="$interval" 'BEGIN {exit !(n>0)}'; then
-        dasterm_error "Interval must be greater than zero"
-        return 1
-      fi
-      dasterm_theme_load
-      while true; do
-        dasterm_render_dashboard "$mode"
-        echo
-        printf "%bPress Ctrl+C to exit watch mode. Refreshing every %ss...%b\n" "$D_WARN" "$interval" "$D_NC"
-        sleep "$interval"
-      done
+      dasterm_watch "$@"
       ;;
 
     *)
