@@ -374,81 +374,23 @@ Reboot required
 
 ---
 
-## 14. AI Assistant
-
-Ask AI:
+## 14. AI and navigation
 
 ```bash
-/ai cek storage server saya
+dasterm menu
+dasterm ai "Bagaimana cara mengecek kapasitas disk?"
+dasterm ai chat
 ```
 
-Or:
+Prexzy AskGPT5 receives explicitly supplied text and, in chat, the preceding
+successful exchange. No system data is attached automatically and no chat file
+is created by Dasterm. Use `/clear` to forget session context, `/retry` for a
+failed request, and `/exit` to return. Old provider ordering and daily-memory
+commands are no longer used. Read [AI.md](AI.md) for the request contract.
 
-```bash
-dasterm ai "cek storage server saya"
-```
-
-If AI suggests a command, Dasterm asks first:
-
-```text
-Run this command? [y/N]
-```
-
-Command will not run without approval.
-
----
-
-## 15. AI Memory
-
-Show memory:
-
-```bash
-/brain-ai
-```
-
-Clear memory:
-
-```bash
-/clear-brain-ai
-```
-
-Memory file:
-
-```text
-~/.cache/dasterm/ai-memory.json
-```
-
-Memory resets daily based on WIB date.
-
----
-
-## 16. AI Provider
-
-Show providers:
-
-```bash
-/ai-provider
-```
-
-Reset providers:
-
-```bash
-/ai-reset-provider
-```
-
-Test providers:
-
-```bash
-/ai-test
-```
-
-Default order:
-
-```text
-chocomilk
-prexzy_copilot
-prexzy_zai
-```
+Configuration now validates choices, supports `/cancel`, and reviews changes
+before confirmation. In watch mode use `q` to leave or `m` to change modes
+(Bash 4+ terminal). See [UI-UX.md](UI-UX.md).
 
 ---
 

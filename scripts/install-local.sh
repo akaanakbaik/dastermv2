@@ -3,8 +3,43 @@ set -euo pipefail
 IFS=$' \t\n'
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [ "${1:-}" = --user ]; then
+  user_prefix="$HOME/.local"
+  mkdir -p "$user_prefix/bin" "$user_prefix/share/dasterm/lib"
+  install -m 755 "$ROOT_DIR/bin/dasterm" "$user_prefix/bin/dasterm"
+  cp -f "$ROOT_DIR/lib/"*.sh "$user_prefix/share/dasterm/lib/"
+  chmod 644 "$user_prefix/share/dasterm/lib/"*.sh
+  ln -sf dasterm "$user_prefix/bin/dashterm"
+  bash "$user_prefix/bin/dasterm" version >/dev/null
+  for user_rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
+    [ "$user_rc" = "$HOME/.bashrc" ] || [ -f "$user_rc" ] || continue
+    touch "$user_rc"
+    user_tmp="$(mktemp "${user_rc}.XXXXXX")"
+    sed '/^### DASTERM_V2_BEGIN ###$/,/^### DASTERM_V2_END ###$/d' "$user_rc" > "$user_tmp"
+    cat "$user_tmp" > "$user_rc"
+    rm -f "$user_tmp"
+    case "$user_rc" in *.zshrc) user_shell=zsh ;; *) user_shell=bash ;; esac
+    # Generate literal shell expressions for the user's next shell session.
+    # shellcheck disable=SC2016
+    {
+      printf '\n### DASTERM_V2_BEGIN ###\n'
+      printf 'export PATH=%q:"$PATH"\n' "$user_prefix/bin"
+      printf 'eval "$(%q shell-init %s 2>/dev/null)"\n' "$user_prefix/bin/dasterm" "$user_shell"
+      printf 'if [ -z "${DASTERM_SESSION_DONE:-}" ] && [ -t 1 ]; then\n'
+      printf '  export DASTERM_SESSION_DONE=1\n'
+      printf '  %q auto 2>/dev/null || true\n' "$user_prefix/bin/dasterm"
+      printf 'fi\n### DASTERM_V2_END ###\n'
+    } >> "$user_rc"
+  done
+  echo 'Dasterm user install complete. Reload your shell to use dasterm.'
+  exit 0
+elif [ "$#" -ne 0 ]; then
+  echo 'Usage: bash scripts/install-local.sh [--user]' >&2
+  exit 1
+fi
 TARGET_USER="${SUDO_USER:-${USER:-root}}"
 TARGET_HOME="$(getent passwd "$TARGET_USER" 2>/dev/null | cut -d: -f6 || echo "${HOME:-/root}")"
+[ -n "$TARGET_HOME" ] || TARGET_HOME="${HOME:-/root}"
 
 if [ "$(id -u)" -ne 0 ]; then
   if command -v sudo >/dev/null 2>&1; then
@@ -27,7 +62,7 @@ mkdir -p "$TARGET_HOME/.config/dasterm" "$TARGET_HOME/.cache/dasterm" "$TARGET_H
 
 if [ ! -f "$TARGET_HOME/.config/dasterm/config.env" ]; then
   cat > "$TARGET_HOME/.config/dasterm/config.env" <<EOF
-DASTERM_VERSION="2.0.0"
+DASTERM_VERSION="2.0.2"
 DASTERM_LANG="id"
 DASTERM_MODE="lite"
 DASTERM_THEME="pastel"

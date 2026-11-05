@@ -1,5 +1,8 @@
 # Dasterm v2 Security
 
+> AI changed in v2.0.2: [AI.md](AI.md) is the current contract.
+> Older provider-order, daily-memory, and AI test-command notes below are historical and no longer apply.
+
 Dokumen ini menjelaskan desain keamanan Dasterm v2.
 
 Dasterm adalah dashboard dan assistant terminal. Karena berjalan di server Linux, keamanan harus menjadi prioritas.

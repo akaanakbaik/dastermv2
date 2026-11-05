@@ -71,11 +71,12 @@ It is especially useful for:
 | Area | What Dasterm v2 does |
 | --- | --- |
 | Dashboard | Lite and Full terminal dashboard modes |
+| Navigation | Interactive `/menu`, responsive sections, resource bars, watch keys |
+| AI | Prexzy AskGPT5, direct questions, session chat, explicit retry and clear |
 | Language | Indonesian and English interface |
 | Installer | Install, update, repair, reconfigure, and uninstall from one installer |
 | Speedtest | Cached speedtest with Mbps, MB/s, Gbps, and GB/s conversion |
-
-| Storage | Root disk, `/datas`, mounts, Docker root, inode usage, and largest folders |
+| Storage | All mounted filesystems, Docker root, inode usage, and largest folders |
 | Services | Docker, PM2, Nginx, Apache, Cloudflared, SSH, Cron, databases, ports |
 | Security | Firewall, SSH, fail2ban, failed login signal, sudo users, login history |
 | Doctor | Dependency, config, cache, shell integration, network, and system health check |
@@ -170,13 +171,13 @@ Lite mode is fast, compact, and ideal for low-resource VPS environments.
 It shows:
 
 - User and host display
-- OS, kernel, and uptime
+- OS and uptime
 - Health score
 - RAM and root disk usage
 - Private IP
 - Load average
 - Saved speedtest summary
-- Small Dasterm logo
+- Resource usage bars and quick navigation
 
 Run:
 
@@ -196,11 +197,11 @@ Full mode is detailed and suitable for deeper system inspection.
 
 It shows:
 
-- Native distro logo using Fastfetch or Neofetch when available
+- Optional Fastfetch/Neofetch logo with `DASTERM_LOGO=on`
 - Full system information
 - CPU model, cores, and flags
 - RAM and swap usage
-- Root disk and `/datas` disk if detected
+- Root disk and dynamically discovered mounted filesystems
 - GPU information
 - Process count and logged-in users
 - Private IP, public IP cache, gateway, and DNS
@@ -232,13 +233,15 @@ Show all commands:
 | Command | Description |
 | --- | --- |
 | `/help` | Show command menu |
+| `/menu` | Open interactive navigation |
+| `/ai [prompt]` | Ask Prexzy AI or start session chat |
 | `/status` | Show active dashboard mode |
 | `/lite` | Show Lite dashboard |
 | `/full` | Show Full dashboard |
 | `/speedtest` | Show saved speedtest result |
 | `/respeedtest` | Run speedtest again and save the result |
 | `/network` | Show network, DNS, gateway, IP, ports, and speed cache |
-| `/storage` | Show disk, `/datas`, mounts, Docker root, and largest folders |
+| `/storage` | Show mounted filesystems, Docker root, and largest folders |
 | `/services` | Show Docker, PM2, Nginx, Apache, Cloudflared, SSH, and ports |
 | `/security` | Check firewall, SSH, fail2ban, and failed login signals |
 | `/doctor` | Check installation, dependencies, cache, config, and system health |
@@ -250,13 +253,21 @@ Show all commands:
 | `/about` | Show project info |
 | `/watch` | Show interactive dashboard in real-time (Watch mode) |
 
-Slash commands are shell aliases. The original CLI also works:
+Slash commands are shell functions. The original CLI also works:
 
 ```bash
 dasterm help
+dasterm menu
 dasterm respeedtest
 dasterm ai "cek storage server saya"
+dasterm ai chat
 ```
+
+AI now uses `https://prexzyapis.com/ai/askgpt5`. In chat, `/clear` resets session
+context, `/retry` retries a failed request, and `/exit` returns to the shell or
+menu. Only text you supply and the preceding chat turn are sent; server data is
+not attached automatically. No chat files are saved by Dasterm. See
+[AI usage and limits](docs/AI.md) and the [terminal UI guide](docs/UI-UX.md).
 
 ---
 
@@ -469,7 +480,7 @@ Dasterm shell block from ~/.bashrc and ~/.zshrc
 | `~/.config/dasterm/config.env` | User configuration |
 | `~/.cache/dasterm/` | Cache files |
 | `~/.cache/dasterm/speedtest.json` | Saved speedtest result |
-| `~/.cache/dasterm/ai-memory.json` | Daily AI memory |
+| AI chat | Session memory only; no chat history file is created |
 | `~/.local/share/dasterm/logs/` | Runtime logs |
 
 ---
@@ -518,6 +529,22 @@ Dasterm does not intentionally collect:
 ---
 
 ## Supported Systems
+
+Compatibility is detected from available commands and filesystems, without an OS
+version or VPS provider allowlist. See [compatibility and test evidence](docs/COMPATIBILITY.md)
+for tested distributions and remaining limits. Native Windows, macOS, and BSD are
+not supported by the system installer; use Linux or WSL.
+
+For an installation without root, clone the repository and run:
+
+```bash
+bash scripts/install-local.sh --user
+source ~/.bashrc
+```
+
+This installs under `~/.local`, supports `update` and `uninstall` for that user,
+and does not install system packages. Missing optional tools produce unavailable
+metrics. `jq` and a timeout implementation are needed for speedtests.
 
 Dasterm targets common Linux environments, including:
 

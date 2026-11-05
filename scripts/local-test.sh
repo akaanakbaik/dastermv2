@@ -49,7 +49,7 @@ trap 'rm -rf "$TMP_HOME"' EXIT
 
 mkdir -p "$TMP_HOME/.config/dasterm" "$TMP_HOME/.cache/dasterm" "$TMP_HOME/.local/share/dasterm/logs"
 cat > "$TMP_HOME/.config/dasterm/config.env" <<EOF
-DASTERM_VERSION="2.0.0"
+DASTERM_VERSION="2.0.2"
 DASTERM_LANG="en"
 DASTERM_MODE="lite"
 DASTERM_THEME="mono"
@@ -73,6 +73,8 @@ if [ "${DASTERM_LOCAL_SYSTEM_TEST:-0}" = "1" ]; then
 else
   yellow "⚠ set DASTERM_LOCAL_SYSTEM_TEST=1 to test installed /usr/local binary"
 fi
+
+run "behavior regressions" python3 -m unittest discover -s tests -p 'test_*.py' -v
 
 if [ "$FAILED" -eq 0 ]; then
   green "All tests passed"
