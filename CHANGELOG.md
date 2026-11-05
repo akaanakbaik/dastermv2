@@ -1,5 +1,22 @@
 # Changelog
 
+## v2.0.1
+
+- Discover mounted filesystems dynamically instead of assuming `/datas`.
+- Support source-checkout execution, relative library discovery, symlinks,
+  XDG runtime directories, and a rootless local install/update/uninstall path.
+- Detect active systemd and support OpenRC/process service fallbacks; improve
+  unavailable metric and ARM CPU fallback behavior.
+- Remove the obsolete ai.sh update download, fail on incomplete downloads or
+  invalid Bash, and propagate update and speedtest failures.
+- Preserve speedtest cache on failure, escape provider metadata correctly, forward
+  all respeedtest arguments, and avoid GNU date nanoseconds in curl fallback.
+- Save config values safely, use private temporary files, remove sudo/flock
+  assumptions in optional installer tasks, and clean up the dashterm symlink.
+- Implement slash commands as shell functions: Bash rejects slash alias names.
+- Add offline behavior regressions, repeated Linux container lifecycle tests,
+  SQLite-backed telemetry worker tests, and a compatibility CI matrix.
+
 ## v2.0.0
 
 Dasterm v2 is a full rewrite focused on interactive setup, better dashboard logic, cached network speed, AI assistant, bilingual UI, clean commands, safer shell integration, and VPS-ready diagnostics.

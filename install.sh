@@ -7,15 +7,15 @@ REPO_NAME="dastermv2"
 REPO_BRANCH="${DASTERM_BRANCH:-main}"
 RAW_BASE="https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}"
 INSTALL_URL="${RAW_BASE}/install.sh"
-TMP_DIR="${TMPDIR:-/tmp}/dasterm-install-$$"
-LOCK="${TMPDIR:-/tmp}/dasterm-install.lock"
+TMP_DIR=""
+LOCK="${TMPDIR:-/tmp}/dasterm-install.lock.d"
 PREFIX="/usr/local"
 BIN_DIR="${PREFIX}/bin"
 SHARE_DIR="${PREFIX}/share/dasterm"
 LIB_DIR="${SHARE_DIR}/lib"
 MARK_BEGIN="### DASTERM_V2_BEGIN ###"
 MARK_END="### DASTERM_V2_END ###"
-VERSION="2.0.0"
+VERSION="2.0.1"
 ACTION=""
 AUTO_CONF="off"
 
@@ -27,11 +27,9 @@ M='\033[0;35m'
 B='\033[1m'
 N='\033[0m'
 
-exec 9>"$LOCK"
-flock -n 9 || { echo "Dasterm installer is already running."; exit 0; }
-
 cleanup() {
-  rm -rf "$TMP_DIR"
+  [ -z "$TMP_DIR" ] || rm -rf "$TMP_DIR"
+  if [ "${LOCK_HELD:-0}" = 1 ]; then rmdir "$LOCK" 2>/dev/null || true; fi
 }
 
 trap cleanup EXIT
@@ -114,7 +112,12 @@ detect_pkgmgr() {
 }
 
 net_ok() {
-  timeout 3 bash -c 'exec 3<>/dev/tcp/1.1.1.1/53' >/dev/null 2>&1 || timeout 3 ping -c1 -W2 1.1.1.1 >/dev/null 2>&1
+  # HTTPS can work when ICMP and direct DNS sockets are blocked by a VPS.
+  if has curl; then
+    curl --connect-timeout 3 --max-time 5 -fsSL "${RAW_BASE}/VERSION" >/dev/null 2>&1
+  else
+    return 0
+  fi
 }
 
 spinner() {
@@ -408,21 +411,21 @@ install_deps() {
       fi
       ;;
     dnf)
-      dnf -qy install curl ca-certificates jq coreutils util-linux procps-ng iproute gawk sed grep pciutils redhat-lsb-core bc >/dev/null
+      dnf -qy install curl ca-certificates jq coreutils util-linux procps-ng iproute gawk sed grep pciutils bc >/dev/null
       if ! has speedtest && ! has speedtest-cli; then
         dnf -qy install speedtest-cli >/dev/null || true
       fi
       ;;
     yum)
-      yum -qy install curl ca-certificates jq coreutils util-linux procps-ng iproute gawk sed grep pciutils redhat-lsb-core bc >/dev/null
+      yum -qy install curl ca-certificates jq coreutils util-linux procps-ng iproute gawk sed grep pciutils bc >/dev/null
       if ! has speedtest && ! has speedtest-cli; then
         yum -qy install speedtest-cli >/dev/null || true
       fi
       ;;
     pacman)
-      pacman -Sy --noconfirm --needed curl ca-certificates jq coreutils util-linux procps-ng iproute2 gawk sed grep pciutils lsb-release bc >/dev/null
+      pacman -S --noconfirm --needed curl ca-certificates jq coreutils util-linux procps-ng iproute2 gawk sed grep pciutils bc >/dev/null
       if ! has speedtest && ! has speedtest-cli; then
-        pacman -Sy --noconfirm --needed speedtest-cli >/dev/null || true
+        pacman -S --noconfirm --needed speedtest-cli >/dev/null || true
       fi
       ;;
     zypper)
@@ -447,7 +450,7 @@ download_file() {
 
   info "Downloading ${src}"
 
-  if ! curl -fsSL "$url" -o "$dst"; then
+  if ! curl --connect-timeout 5 --max-time 30 -fsSL "$url" -o "$dst"; then
     err "Failed to download: $src"
     err "URL: $url"
     err "Pastikan file ini ada di repo, path benar, branch benar, dan repo public."
@@ -482,11 +485,18 @@ save_config_value() {
     touch "$CONFIG_FILE"
     chmod 600 "$CONFIG_FILE"
   fi
-  if grep -q "^${key}=" "$CONFIG_FILE"; then
-    sed -i "s|^${key}=.*|${key}=\"${value}\"|" "$CONFIG_FILE"
-  else
-    printf '%s="%s"\n' "$key" "$value" >> "$CONFIG_FILE"
-  fi
+  [[ "$key" =~ ^DASTERM_[A-Z0-9_]+$ ]] || return 1
+  local tmp escaped
+  tmp="$(mktemp "${CONFIG_FILE}.XXXXXX")"
+  # Double quotes keep compatibility with older versions' config readers.
+  escaped="${value//\\/\\\\}"
+  escaped="${escaped//\"/\\\"}"
+  escaped="${escaped//\$/\\\$}"
+  escaped="${escaped//\`/\\\`}"
+  awk -v key="$key" 'index($0,key "=") != 1' "$CONFIG_FILE" > "$tmp"
+  printf '%s="%s"\n' "$key" "$escaped" >> "$tmp"
+  chmod 600 "$tmp"
+  mv -f "$tmp" "$CONFIG_FILE"
 }
 
 write_config() {
@@ -547,8 +557,8 @@ install_slash_commands() {
 }
 
 remove_slash_commands() {
-  local name target
-  while IFS=: read -r name target; do
+  local name _target
+  while IFS=: read -r name _target; do
     [ -n "$name" ] || continue
     rm -f "/$name"
   done < <(slash_command_names)
@@ -599,13 +609,26 @@ run_initial_speedtest() {
   [ "${DASH_SPEED_INIT:-off}" = "on" ] || return 0
 
   if [ -x "$BIN_DIR/dasterm" ]; then
-    sudo -u "$TARGET_USER" env HOME="$TARGET_HOME" "$BIN_DIR/dasterm" respeedtest --quiet || true
+    run_as_target "$BIN_DIR/dasterm" respeedtest --quiet || true
   fi
 }
 
 send_install_telemetry() {
   if [ -x "$BIN_DIR/dasterm" ]; then
-    sudo -u "$TARGET_USER" env HOME="$TARGET_HOME" "$BIN_DIR/dasterm" telemetry-send install >/dev/null 2>&1 || true
+    run_as_target "$BIN_DIR/dasterm" telemetry-send install >/dev/null 2>&1 || true
+  fi
+}
+
+run_as_target() {
+  if [ "$(id -un)" = "$TARGET_USER" ]; then
+    env HOME="$TARGET_HOME" "$@"
+  elif has runuser; then
+    runuser -u "$TARGET_USER" -- env HOME="$TARGET_HOME" "$@"
+  elif has sudo; then
+    sudo -u "$TARGET_USER" env HOME="$TARGET_HOME" "$@"
+  else
+    warn "Cannot switch to $TARGET_USER: optional user task skipped."
+    return 1
   fi
 }
 
@@ -708,7 +731,7 @@ do_uninstall() {
   done
 
   remove_slash_commands
-  rm -f "$BIN_DIR/dasterm"
+  rm -f "$BIN_DIR/dasterm" "$BIN_DIR/dashterm"
   rm -rf "$SHARE_DIR"
   rm -rf "$CONFIG_DIR"
   rm -rf "$CACHE_DIR"
@@ -774,6 +797,16 @@ parse_args() {
 
 main() {
   parse_args "$@"
+  if [ "$(uname -s)" != Linux ]; then
+    err "The system installer requires Linux with Bash. Use a Linux VPS or WSL."
+    exit 1
+  fi
+  if ! mkdir "$LOCK" 2>/dev/null; then
+    err "Installer lock exists: $LOCK. If no installer is running, remove this stale directory."
+    exit 1
+  fi
+  LOCK_HELD=1
+  TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/dasterm-install.XXXXXX")"
   banner
   detect_user
   load_existing_language

@@ -48,7 +48,6 @@ dasterm_row() {
 }
 
 dasterm_health_score() {
-  local score=100
   local diskp ramp load1 cores
   diskp="$(df -P / 2>/dev/null | awk 'NR==2{gsub("%","",$5);print $5+0}' || echo 0)"
   ramp="$(free 2>/dev/null | awk '/Mem:/ {printf "%.0f", ($3/$2)*100}' || echo 0)"
@@ -97,7 +96,7 @@ dasterm_render_full() {
 
 dasterm_render_side_by_side() {
   local mode="$1"
-  printf "\033[H\033[2J\033[3J" 2>/dev/null || true
+  if dasterm_is_tty; then printf "\033[H\033[2J\033[3J"; fi
 
   # 1. Capture logo lines
   local logo_lines=()
@@ -146,7 +145,11 @@ dasterm_render_side_by_side() {
       dasterm_row "RAM" "$(dasterm_ram_line)"
       dasterm_row "Swap" "$(dasterm_swap_line)"
       dasterm_row "Disk Root" "$(dasterm_disk_line /)"
-      [ -d /datas ] && dasterm_row "Disk /datas" "$(dasterm_disk_line /datas)"
+      local mount_path
+      while IFS= read -r mount_path; do
+        [ "$mount_path" = / ] && continue
+        dasterm_row "Disk $mount_path" "$(dasterm_disk_line "$mount_path")"
+      done < <(dasterm_storage_paths)
       dasterm_row "GPU" "$(dasterm_gpu)"
       dasterm_row "Processes" "$(ps -e --no-headers 2>/dev/null | wc -l | awk '{print $1}' || echo N/A)"
       dasterm_row "Users" "$(who 2>/dev/null | wc -l | awk '{print $1}' || echo N/A)"
@@ -187,8 +190,9 @@ dasterm_render_side_by_side() {
   local logo_line
   for logo_line in "${logo_lines[@]}"; do
     local visible_line
+    # shellcheck disable=SC2001
     visible_line=$(echo "$logo_line" | sed "s/$(printf '\033')\\[[0-9;]*m//g")
-    if [ ${#visible_line} -gt $max_logo_len ]; then
+    if [ "${#visible_line}" -gt "$max_logo_len" ]; then
       max_logo_len=${#visible_line}
     fi
   done
@@ -205,6 +209,7 @@ dasterm_render_side_by_side() {
     # Fallback to vertical stacked layout for narrow terminals
     for logo_line in "${logo_lines[@]}"; do
       local visible_line
+      # shellcheck disable=SC2001
       visible_line=$(echo "$logo_line" | sed "s/$(printf '\033')\\[[0-9;]*m//g")
       visible_line=$(echo "$visible_line" | tr -d '[:space:]')
       if [ -n "$visible_line" ]; then
@@ -228,12 +233,13 @@ dasterm_render_side_by_side() {
       local r_val=""
       local vis_l=""
 
-      if [ $i -lt $logo_count ]; then
+      if [ "$i" -lt "$logo_count" ]; then
         l_val="${logo_lines[$i]}"
+        # shellcheck disable=SC2001
         vis_l=$(echo "$l_val" | sed "s/$(printf '\033')\\[[0-9;]*m//g")
       fi
 
-      if [ $i -lt $info_count ]; then
+      if [ "$i" -lt "$info_count" ]; then
         r_val="${info_lines[$i]}"
       fi
 

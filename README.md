@@ -519,6 +519,22 @@ Dasterm does not intentionally collect:
 
 ## Supported Systems
 
+Compatibility is detected from available commands and filesystems, without an OS
+version or VPS provider allowlist. See [compatibility and test evidence](docs/COMPATIBILITY.md)
+for tested distributions and remaining limits. Native Windows, macOS, and BSD are
+not supported by the system installer; use Linux or WSL.
+
+For an installation without root, clone the repository and run:
+
+```bash
+bash scripts/install-local.sh --user
+source ~/.bashrc
+```
+
+This installs under `~/.local`, supports `update` and `uninstall` for that user,
+and does not install system packages. Missing optional tools produce unavailable
+metrics. `jq` and a timeout implementation are needed for speedtests.
+
 Dasterm targets common Linux environments, including:
 
 - Ubuntu

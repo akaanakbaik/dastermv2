@@ -17,7 +17,7 @@ dasterm_telemetry_payload() {
   local event="$1"
   jq -n \
     --arg event "$event" \
-    --arg version "${DASTERM_VERSION:-2.0.0}" \
+    --arg version "${DASTERM_VERSION:-2.0.1}" \
     --arg distro "$(dasterm_os_id)" \
     --arg distro_version "$(dasterm_os_version)" \
     --arg arch "$(uname -m 2>/dev/null || echo unknown)" \
@@ -48,7 +48,7 @@ dasterm_telemetry_send() {
   [ -n "$endpoint" ] || return 0
   dasterm_has curl || return 0
   dasterm_has jq || return 0
-  dasterm_telemetry_payload "$event" | timeout 5 curl -fsSL -X POST "$endpoint" -H "Content-Type: application/json" --data-binary @- >/dev/null 2>&1 || true
+  dasterm_telemetry_payload "$event" | dasterm_timeout 5 curl -fsSL -X POST "$endpoint" -H "Content-Type: application/json" --data-binary @- >/dev/null 2>&1 || true
 }
 
 dasterm_telemetry_badge_notes() {

@@ -3,8 +3,8 @@ set -euo pipefail
 IFS=$' \t\n'
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="$(cat "$ROOT_DIR/VERSION" 2>/dev/null | tr -d '[:space:]')"
-VERSION="${VERSION:-2.0.0}"
+VERSION="$(tr -d '[:space:]' < "$ROOT_DIR/VERSION")"
+VERSION="${VERSION:-2.0.1}"
 DIST_DIR="$ROOT_DIR/dist"
 PKG_NAME="dasterm-v${VERSION}"
 PKG_DIR="$DIST_DIR/$PKG_NAME"
@@ -34,10 +34,14 @@ copy_path bin
 copy_path lib
 copy_path docs
 copy_path scripts
+copy_path tests
 copy_path worker
 copy_path .github
 copy_path .editorconfig
+copy_path .shellcheckrc
 copy_path .gitignore
+
+find "$PKG_DIR" -type d -name __pycache__ -prune -exec rm -rf {} +
 
 find "$PKG_DIR" -type f -name "*.sh" -exec chmod +x {} \;
 chmod +x "$PKG_DIR/bin/dasterm" 2>/dev/null || true

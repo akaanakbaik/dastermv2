@@ -22,8 +22,8 @@ dasterm_t() {
     en:help_respeedtest) echo "Run speedtest again (options: fast, ookla, python, or --server ID)." ;;
     id:help_network) echo "Lihat detail jaringan, DNS, gateway, IP, dan speed cache." ;;
     en:help_network) echo "Show network, DNS, gateway, IP, and speed cache details." ;;
-    id:help_storage) echo "Lihat root disk, /datas, mount, dan folder besar." ;;
-    en:help_storage) echo "Show root disk, /datas, mounts, and largest folders." ;;
+    id:help_storage) echo "Lihat seluruh filesystem ter-mount, inode, dan folder besar." ;;
+    en:help_storage) echo "Show mounted filesystems, inodes, and largest folders." ;;
     id:help_services) echo "Lihat status service penting seperti Docker, Nginx, PM2, SSH." ;;
     en:help_services) echo "Show important services like Docker, Nginx, PM2, SSH." ;;
     id:help_security) echo "Cek firewall, SSH, login root, dan sinyal keamanan." ;;

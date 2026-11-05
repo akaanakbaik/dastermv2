@@ -56,7 +56,7 @@ dasterm_security_last_logins() {
 }
 
 dasterm_security_failed_logins() {
-  if dasterm_has journalctl; then
+  if dasterm_systemd_available && dasterm_has journalctl; then
     local err_msg
     if ! err_msg="$(journalctl -n 1 --quiet 2>&1)" || echo "$err_msg" | grep -qiE 'No journal files|permission|access'; then
       echo "N/A (Access Denied)"
@@ -112,7 +112,11 @@ dasterm_security_suggestions() {
     yes|default) dasterm_warn "PasswordAuthentication may be enabled. SSH key login is safer." ;;
     *) dasterm_success "SSH password login setting looks acceptable." ;;
   esac
-  echo "$firewall" | grep -qiE 'inactive|not detected|not running' && dasterm_warn "Firewall is not clearly active. Consider enabling UFW or firewalld." || dasterm_success "Firewall signal detected."
+  if echo "$firewall" | grep -qiE 'inactive|not detected|not running'; then
+    dasterm_warn "Firewall is not clearly active. Consider enabling UFW or firewalld."
+  else
+    dasterm_success "Firewall signal detected."
+  fi
   if ! dasterm_has fail2ban-client; then
     dasterm_info "Fail2ban is not installed. It can help reduce brute-force SSH attacks."
   fi

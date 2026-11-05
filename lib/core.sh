@@ -1,4 +1,4 @@
-DASTERM_VERSION="${DASTERM_VERSION:-2.0.0}"
+DASTERM_VERSION="${DASTERM_VERSION:-2.0.1}"
 DASTERM_CONFIG_DIR="${DASTERM_CONFIG_DIR:-$HOME/.config/dasterm}"
 DASTERM_CACHE_DIR="${DASTERM_CACHE_DIR:-$HOME/.cache/dasterm}"
 DASTERM_DATA_DIR="${DASTERM_DATA_DIR:-$HOME/.local/share/dasterm}"
@@ -40,7 +40,13 @@ dasterm_cols() {
 dasterm_timeout() {
   local sec="$1"
   shift
-  timeout "$sec" "$@" 2>/dev/null
+  if dasterm_has timeout; then
+    timeout "$sec" "$@" 2>/dev/null
+  elif dasterm_has gtimeout; then
+    gtimeout "$sec" "$@" 2>/dev/null
+  else
+    return 127
+  fi
 }
 
 dasterm_safe_read_file() {
@@ -114,11 +120,14 @@ dasterm_save_config_value() {
     touch "$DASTERM_CONFIG"
     chmod 600 "$DASTERM_CONFIG"
   fi
-  if grep -q "^${key}=" "$DASTERM_CONFIG"; then
-    sed -i "s|^${key}=.*|${key}=\"${value}\"|" "$DASTERM_CONFIG"
-  else
-    printf '%s="%s"\n' "$key" "$value" >> "$DASTERM_CONFIG"
-  fi
+  [[ "$key" =~ ^DASTERM_[A-Z0-9_]+$ ]] || return 1
+  local tmp escaped
+  tmp="$(mktemp "${DASTERM_CONFIG}.XXXXXX")" || return 1
+  printf -v escaped '%q' "$value"
+  awk -v key="$key" 'index($0,key "=") != 1' "$DASTERM_CONFIG" > "$tmp"
+  printf '%s=%s\n' "$key" "$escaped" >> "$tmp"
+  chmod 600 "$tmp"
+  mv -f "$tmp" "$DASTERM_CONFIG"
 }
 
 dasterm_theme_load() {
@@ -154,6 +163,7 @@ dasterm_theme_load() {
   D_BOLD='\033[1m'
   D_NC='\033[0m'
   if [ -n "${NO_COLOR:-}" ] || ! dasterm_is_tty; then
+    # shellcheck disable=SC2034
     D_C1='' D_C2='' D_C3='' D_C4='' D_OK='' D_WARN='' D_ERR='' D_BOLD='' D_NC=''
   fi
 }
@@ -236,13 +246,16 @@ dasterm_spinner_run() {
 
 dasterm_public_ip() {
   if dasterm_has curl; then
-    timeout 4 curl -fsSL https://api.ipify.org 2>/dev/null || true
+    dasterm_timeout 4 curl -fsSL https://api.ipify.org 2>/dev/null || true
   fi
 }
 
 dasterm_write_json_atomic() {
   local file="$1"
-  local tmp="${file}.tmp.$$"
-  cat > "$tmp"
-  mv "$tmp" "$file"
+  local tmp
+  tmp="$(mktemp "${file}.XXXXXX")" || return 1
+  if ! cat > "$tmp" || ! mv -f "$tmp" "$file"; then
+    rm -f "$tmp"
+    return 1
+  fi
 }
