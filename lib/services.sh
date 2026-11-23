@@ -1,10 +1,6 @@
 dasterm_services_systemd_unit() {
   local unit="$1"
-  if dasterm_has systemctl; then
-    systemctl is-active "$unit" 2>/dev/null || echo "not detected"
-  else
-    echo "systemctl unavailable"
-  fi
+  dasterm_service_state "$unit"
 }
 
 dasterm_services_process_count() {
@@ -112,7 +108,7 @@ dasterm_services_database_summary() {
 }
 
 dasterm_services_failed_units() {
-  if dasterm_has systemctl; then
+  if dasterm_systemd_available; then
     local failed
     failed="$(systemctl --failed --no-legend 2>/dev/null | awk '{print $1"("$2")"}' | paste -sd ", " -)"
     [ -n "$failed" ] && echo "$failed" || echo "none"

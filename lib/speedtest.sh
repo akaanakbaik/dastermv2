@@ -31,7 +31,8 @@ dasterm_speed_calc_json() {
   local region="$7"
   local server="$8"
   local source="$9"
-  awk -v d="$down_bps" -v u="$up_bps" -v p="$ping" -v j="$jitter" -v l="$loss" -v provider="$provider" -v region="$region" -v server="$server" -v source="$source" -v tested="$(dasterm_now)" 'BEGIN{
+  dasterm_has jq || return 1
+  awk -v d="$down_bps" -v u="$up_bps" -v p="$ping" -v j="$jitter" 'BEGIN{
     d_mbps=d/1000000;
     u_mbps=u/1000000;
     d_MBps=d_mbps/8;
@@ -41,22 +42,19 @@ dasterm_speed_calc_json() {
     d_GBps=d_MBps/1000;
     u_GBps=u_MBps/1000;
     printf "{";
-    printf "\"tested_at\":\"%s\",", tested;
-    printf "\"source\":\"%s\",", source;
-    printf "\"provider\":\"%s\",", provider;
-    printf "\"region\":\"%s\",", region;
-    printf "\"server\":\"%s\",", server;
-    printf "\"ping\":{\"ms\":\"%.2f\",\"jitter_ms\":\"%.2f\",\"packet_loss\":\"%s\"},", p+0, j+0, l;
+    printf "\"ping\":{\"ms\":\"%.2f\",\"jitter_ms\":\"%.2f\"},", p+0, j+0;
     printf "\"download\":{\"bps\":\"%.0f\",\"mbps\":\"%.2f\",\"MBps\":\"%.2f\",\"gbps\":\"%.3f\",\"GBps\":\"%.3f\"},", d, d_mbps, d_MBps, d_gbps, d_GBps;
     printf "\"upload\":{\"bps\":\"%.0f\",\"mbps\":\"%.2f\",\"MBps\":\"%.2f\",\"gbps\":\"%.3f\",\"GBps\":\"%.3f\"},", u, u_mbps, u_MBps, u_gbps, u_GBps;
     printf "\"formula\":{\"MBps\":\"Mbps / 8\",\"Gbps\":\"Mbps / 1000\",\"GBps\":\"Mbps / 8000\"}";
     printf "}\n";
-  }'
+  }' | jq --arg tested "$(dasterm_now)" --arg source "$source" --arg provider "$provider" \
+    --arg region "$region" --arg server "$server" --arg loss "$loss" \
+    '. + {tested_at:$tested, source:$source, provider:$provider, region:$region, server:$server} | .ping.packet_loss=$loss'
 }
 
 dasterm_speedtest_ookla() {
   local raw down up ping jitter loss provider region server
-  raw="$(timeout 180 speedtest --accept-license --accept-gdpr --format=json 2>/dev/null || true)"
+  raw="$(dasterm_timeout 180 speedtest --accept-license --accept-gdpr --format=json 2>/dev/null || true)"
   [ -n "$raw" ] || return 1
   echo "$raw" | jq -e . >/dev/null 2>&1 || return 1
   down="$(echo "$raw" | jq -r '.download.bandwidth // 0' | awk '{printf "%.0f", $1*8}')"
@@ -74,7 +72,7 @@ dasterm_speedtest_ookla() {
 dasterm_speedtest_cli_json_cmd() {
   local cmd="$1"
   local raw down up ping provider region server
-  raw="$(timeout 180 "$cmd" --json 2>/dev/null || true)"
+  raw="$(dasterm_timeout 180 "$cmd" --json 2>/dev/null || true)"
   [ -n "$raw" ] || return 1
   echo "$raw" | jq -e . >/dev/null 2>&1 || return 1
   down="$(echo "$raw" | jq -r '.download // 0')"
@@ -90,7 +88,7 @@ dasterm_speedtest_cli_json_cmd() {
 dasterm_speedtest_text_cmd() {
   local cmd="$1"
   local raw down_value down_unit up_value up_unit down up ping provider region server hosted_line
-  raw="$(timeout 180 "$cmd" 2>/dev/null || true)"
+  raw="$(dasterm_timeout 180 "$cmd" 2>/dev/null || true)"
   [ -n "$raw" ] || return 1
 
   down_value="$(printf "%s\n" "$raw" | awk -F: '/Download:/ {gsub(/^[ \t]+/,"",$2); split($2,a," "); print a[1]; exit}')"
@@ -122,18 +120,20 @@ dasterm_speedtest_text_cmd() {
 }
 
 dasterm_speedtest_curl_fallback() {
-  local url bytes start end elapsed bps
+  local url metrics bytes elapsed bps
   url="https://speed.cloudflare.com/__down?bytes=25000000"
-  start="$(date +%s%N)"
-  bytes="$(timeout 60 curl -Lfs "$url" -o /dev/null -w '%{size_download}' 2>/dev/null || echo 0)"
-  end="$(date +%s%N)"
-  elapsed="$(awk -v s="$start" -v e="$end" 'BEGIN{printf "%.6f", (e-s)/1000000000}')"
+  metrics="$(dasterm_timeout 60 curl --connect-timeout 5 --max-time 55 -Lfs "$url" -o /dev/null -w '%{size_download} %{time_total}' 2>/dev/null)" || return 1
+  read -r bytes elapsed <<< "$metrics"
   bps="$(awk -v b="$bytes" -v t="$elapsed" 'BEGIN{if(t>0) printf "%.0f", (b*8)/t; else print 0}')"
   [ "$bps" != "0" ] || return 1
   dasterm_speed_calc_json "$bps" "0" "$(dasterm_ping_ms 1.1.1.1)" "0" "unknown" "" "Cloudflare fallback" "Cloudflare" "curl-fallback"
 }
 
 dasterm_speedtest_run() {
+  if ! dasterm_has jq; then
+    dasterm_error "Speedtest requires jq; install it with your system package manager."
+    return 1
+  fi
   local mode="standard"
   local quiet="off"
   local server_id=""
@@ -171,7 +171,7 @@ dasterm_speedtest_run() {
     if dasterm_has speedtest && dasterm_has jq; then
       if [ -n "$server_id" ]; then
         local raw
-        raw="$(timeout 180 speedtest --accept-license --accept-gdpr --format=json --server-id="$server_id" 2>/dev/null || true)"
+        raw="$(dasterm_timeout 180 speedtest --accept-license --accept-gdpr --format=json --server-id="$server_id" 2>/dev/null || true)"
         if [ -n "$raw" ] && echo "$raw" | jq -e . >/dev/null 2>&1; then
           local down up ping jitter loss provider region server
           down="$(echo "$raw" | jq -r '.download.bandwidth // 0' | awk '{printf "%.0f", $1*8}')"
@@ -192,7 +192,7 @@ dasterm_speedtest_run() {
     if dasterm_has speedtest-cli && dasterm_has jq; then
       if [ -n "$server_id" ]; then
         local raw down up ping provider region server
-        raw="$(timeout 180 speedtest-cli --json --server "$server_id" 2>/dev/null || true)"
+        raw="$(dasterm_timeout 180 speedtest-cli --json --server "$server_id" 2>/dev/null || true)"
         if [ -n "$raw" ] && echo "$raw" | jq -e . >/dev/null 2>&1; then
           down="$(echo "$raw" | jq -r '.download // 0')"
           up="$(echo "$raw" | jq -r '.upload // 0')"
@@ -211,7 +211,7 @@ dasterm_speedtest_run() {
     if [ -n "$server_id" ]; then
       if dasterm_has speedtest && dasterm_has jq; then
         local raw
-        raw="$(timeout 180 speedtest --accept-license --accept-gdpr --format=json --server-id="$server_id" 2>/dev/null || true)"
+        raw="$(dasterm_timeout 180 speedtest --accept-license --accept-gdpr --format=json --server-id="$server_id" 2>/dev/null || true)"
         if [ -n "$raw" ] && echo "$raw" | jq -e . >/dev/null 2>&1; then
           local down up ping jitter loss provider region server
           down="$(echo "$raw" | jq -r '.download.bandwidth // 0' | awk '{printf "%.0f", $1*8}')"
@@ -227,7 +227,7 @@ dasterm_speedtest_run() {
       fi
       if [ -z "$json" ] && dasterm_has speedtest-cli && dasterm_has jq; then
         local raw down up ping provider region server
-        raw="$(timeout 180 speedtest-cli --json --server "$server_id" 2>/dev/null || true)"
+        raw="$(dasterm_timeout 180 speedtest-cli --json --server "$server_id" 2>/dev/null || true)"
         if [ -n "$raw" ] && echo "$raw" | jq -e . >/dev/null 2>&1; then
           down="$(echo "$raw" | jq -r '.download // 0')"
           up="$(echo "$raw" | jq -r '.upload // 0')"
@@ -260,12 +260,12 @@ dasterm_speedtest_run() {
     fi
   fi
 
-  if [ -z "$json" ]; then
+  if [ -z "$json" ] || ! printf '%s\n' "$json" | jq -e '(.download.bps | tonumber) > 0' >/dev/null 2>&1; then
     dasterm_error "Speedtest failed. Install speedtest, speedtest-cli, jq, or curl."
     return 1
   fi
 
-  printf "%s\n" "$json" | jq . > "$file" 2>/dev/null || printf "%s\n" "$json" > "$file"
+  printf "%s\n" "$json" | dasterm_write_json_atomic "$file" || return 1
   chmod 600 "$file"
 
   if [ "$quiet" != "on" ]; then
@@ -280,6 +280,10 @@ dasterm_speedtest_show() {
 
   if [ ! -f "$file" ]; then
     dasterm_warn "$(dasterm_t speed_saved_empty)"
+    return 0
+  fi
+  if ! dasterm_has jq || ! jq -e '.download and .upload and .ping' "$file" >/dev/null 2>&1; then
+    dasterm_warn "Speedtest cache unavailable: install jq or run respeedtest to rebuild it."
     return 0
   fi
 

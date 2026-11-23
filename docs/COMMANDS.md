@@ -8,7 +8,7 @@ Dasterm mendukung dua bentuk command:
 dasterm <command>
 ```
 
-Dan slash alias:
+Dan slash functions:
 
 ```bash
 /<command>
@@ -26,7 +26,7 @@ Sama dengan:
 /help
 ```
 
-Slash alias aktif jika saat install/config kamu memilih:
+Slash functions aktif jika saat install/config kamu memilih:
 
 ```text
 Enable slash commands like /help, /ai, /update? yes
@@ -37,7 +37,8 @@ Enable slash commands like /help, /ai, /update? yes
 ## 1. Command Ringkas
 
 ```text
-/help              Show command menu
+/help              Show command help
+/menu              Open interactive navigation
 /status            Show active dashboard mode
 /lite              Show lite dashboard
 /full              Show full dashboard
@@ -49,11 +50,6 @@ Enable slash commands like /help, /ai, /update? yes
 /security          Check firewall, SSH root login, password auth, fail2ban
 /doctor            Check Dasterm installation, dependencies, cache, config
 /ai <request>      Ask Dasterm AI
-/brain-ai          Show today's AI memory
-/clear-brain-ai    Clear today's AI memory
-/ai-provider       Show AI provider order
-/ai-reset-provider Reset AI provider order
-/ai-test           Test all AI providers
 /config            Open interactive config
 /update            Update Dasterm
 /uninstall         Open clean uninstall flow
@@ -506,181 +502,24 @@ Update gagal
 
 ---
 
-## 13. AI
-
-Slash:
+## 13. AI and interactive navigation
 
 ```bash
-/ai cek storage server saya
+dasterm menu
+dasterm ai "Jelaskan cara mengecek disk Linux"
+dasterm ai chat
+printf '%s' 'Apa itu swap?' | dasterm ai --stdin
+dasterm ai --help
+dasterm watch lite 3
 ```
 
-Command asli:
+Slash forms `/menu` and `/ai` work after shell initialization. In chat use
+`/clear`, `/retry`, `/help`, and `/exit`. Context lives only in the running
+process; Dasterm does not read the old daily-memory/provider-state files.
+The previous AI brain/provider-order/test commands are not supported.
 
-```bash
-dasterm ai "cek storage server saya"
-```
-
-Fungsi:
-
-```text
-Bertanya ke AI Dasterm.
-AI menjawab dengan hasil.
-Jika perlu command, AI memberi satu command.
-Dasterm meminta approval sebelum command dijalankan.
-```
-
-Contoh approval:
-
-```text
-AI suggests this command:
-
-dasterm storage
-
-Run this command? [y/N]
-```
-
----
-
-## 14. AI Brain
-
-Slash:
-
-```bash
-/brain-ai
-```
-
-Command asli:
-
-```bash
-dasterm brain-ai
-```
-
-Fungsi:
-
-```text
-Menampilkan memori AI hari ini.
-```
-
-Memory file:
-
-```text
-~/.cache/dasterm/ai-memory.json
-```
-
----
-
-## 15. Clear AI Brain
-
-Slash:
-
-```bash
-/clear-brain-ai
-```
-
-Command asli:
-
-```bash
-dasterm clear-brain-ai
-```
-
-Fungsi:
-
-```text
-Menghapus memori AI hari ini.
-```
-
-Gunakan jika:
-
-```text
-AI salah konteks
-Memory terasa kacau
-Ingin mulai percakapan baru
-Ada data yang tidak ingin tersimpan
-```
-
----
-
-## 16. AI Provider
-
-Slash:
-
-```bash
-/ai-provider
-```
-
-Command asli:
-
-```bash
-dasterm ai-provider
-```
-
-Fungsi:
-
-```text
-Melihat urutan provider AI aktif.
-Melihat primary, fallback1, fallback2.
-Melihat primary delay count.
-```
-
----
-
-## 17. Reset AI Provider
-
-Slash:
-
-```bash
-/ai-reset-provider
-```
-
-Command asli:
-
-```bash
-dasterm ai-reset-provider
-```
-
-Fungsi:
-
-```text
-Mengembalikan urutan provider AI ke default.
-```
-
-Default:
-
-```text
-primary   : chocomilk
-fallback1 : prexzy_copilot
-fallback2 : prexzy_zai
-```
-
----
-
-## 18. AI Test
-
-Slash:
-
-```bash
-/ai-test
-```
-
-Command asli:
-
-```bash
-dasterm ai-test
-```
-
-Fungsi:
-
-```text
-Mengetes semua provider AI.
-```
-
-Provider:
-
-```text
-chocomilk
-prexzy_copilot
-prexzy_zai
-```
+See [AI guide](AI.md) and [terminal interface](UI-UX.md). Watch supports `q`
+to exit and `m` to toggle modes in Bash 4+ terminals; Ctrl+C remains available.
 
 ---
 
@@ -713,7 +552,7 @@ Theme
 User@Host
 Show dashboard
 Prompt custom
-Slash aliases
+Slash functionses
 Telemetry
 ```
 
@@ -839,10 +678,10 @@ Jika masih tidak jalan:
 dasterm config
 ```
 
-Pastikan slash alias aktif:
+Pastikan slash functions aktif:
 
 ```text
-Enable slash aliases? on
+Enable slash functionses? on
 ```
 
 ---

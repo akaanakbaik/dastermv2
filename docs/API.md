@@ -6,7 +6,6 @@ Dasterm v2 bisa memakai beberapa API untuk:
 
 ```text
 AI assistant
-AI fallback
 Telemetry opsional
 Public IP cache
 Speedtest fallback
@@ -15,196 +14,24 @@ Update dari GitHub raw
 
 ---
 
-## 1. AI Main Provider
-
-Provider utama default:
-
-```text
-chocomilk
-```
-
-Endpoint:
-
-```text
-https://chocomilk.amira.us.kg/v1/llm/chatgpt/completions
-```
-
-Contoh:
+## 1. AI: Prexzy AskGPT5
 
 ```bash
-curl -X GET "https://chocomilk.amira.us.kg/v1/llm/chatgpt/completions?ask=halo&systempromt=seorang+ai+dasterm" \
-  -H "Accept: application/json"
+curl --get 'https://prexzyapis.com/ai/askgpt5' --data-urlencode 'prompt=hii'
 ```
 
-Contoh response:
+Dasterm requires a successful JSON object with `status: true`, optional numeric
+`statusCode` in the 2xx range, and a nonempty string `response`. The optional
+`model` is displayed as reported by the provider; AskGPT5 is a service name,
+not a guarantee of GPT-5. On 2026-11-05 the service reported
+`qwen3.5-397b-a17b`.
 
-```json
-{
-  "info": "Developed by ZTRdiamond - Zanixon Group",
-  "code": 200,
-  "success": true,
-  "data": {
-    "answer": "Halo! Ada yang bisa saya bantu?"
-  },
-  "error": null
-}
-```
-
-Dasterm mengambil:
-
-```text
-.data.answer
-```
-
----
-
-## 2. AI Fallback Provider 1
-
-Provider:
-
-```text
-prexzy_copilot
-```
-
-Endpoint:
-
-```text
-https://apis.prexzyvilla.site/ai/copilot
-```
-
-Contoh:
-
-```bash
-curl -X GET "https://apis.prexzyvilla.site/ai/copilot?text=halo" \
-  -H "Accept: application/json"
-```
-
-Contoh response:
-
-```json
-{
-  "status": true,
-  "statusCode": 200,
-  "creator": "prexzy",
-  "model": "Copilot",
-  "text": "halo",
-  "response": "Halo! Ada yang bisa saya bantu?",
-  "timestamp": "2026-05-10T12:37:58.039Z"
-}
-```
-
-Dasterm mengambil:
-
-```text
-.response
-```
-
----
-
-## 3. AI Fallback Provider 2
-
-Provider:
-
-```text
-prexzy_zai
-```
-
-Endpoint:
-
-```text
-https://apis.prexzyvilla.site/ai/zai
-```
-
-Contoh:
-
-```bash
-curl -X GET "https://apis.prexzyvilla.site/ai/zai?text=halo+ai" \
-  -H "Accept: application/json"
-```
-
-Contoh response:
-
-```json
-{
-  "status": true,
-  "statusCode": 200,
-  "creator": "prexzy",
-  "model": "Z.ai GLM-5",
-  "text": "halo ai",
-  "response": "Halo! Apa kabar? Ada yang bisa saya bantu hari ini?",
-  "timestamp": "2026-05-10T12:37:58.039Z"
-}
-```
-
-Dasterm mengambil:
-
-```text
-.response
-```
-
----
-
-## 4. AI Timeout
-
-Setiap provider diberi timeout:
-
-```text
-10 seconds
-```
-
-Jika provider utama timeout/error:
-
-```text
-Output provider utama diabaikan
-Dasterm lanjut ke fallback 1
-Jika fallback 1 gagal, lanjut fallback 2
-```
-
-Jika provider utama gagal 3 kali:
-
-```text
-fallback1 menjadi primary
-fallback2 menjadi fallback1
-primary lama menjadi fallback2
-```
-
-State disimpan di:
-
-```text
-~/.cache/dasterm/ai-provider-state.json
-```
-
----
-
-## 5. AI Metadata Contract
-
-Dasterm meminta AI mengembalikan JSON:
-
-```json
-{
-  "hasil": "Jawaban untuk user.",
-  "cmd": "dasterm storage"
-}
-```
-
-Jika tidak perlu command:
-
-```json
-{
-  "hasil": "Jawaban untuk user."
-}
-```
-
-Aturan:
-
-```text
-hasil wajib ada
-cmd optional
-cmd hanya boleh satu command
-cmd tidak boleh command chaining
-cmd harus melewati whitelist
-cmd harus disetujui user sebelum dijalankan
-```
+Prompts are capped at 4000 UTF-8 bytes. HTTPS verification remains enabled;
+connect/total deadlines are 8/45 seconds and responses are limited to 1 MiB.
+No automatic retries or provider fallback are performed. Dasterm does not
+persist provider state or chat history. See [AI.md](AI.md) for chat controls,
+data handling, error behavior, and tests. This replaces the earlier provider
+ordering, daily memory, and fallback contracts.
 
 ---
 
@@ -469,8 +296,7 @@ Dasterm harus tetap berjalan walaupun API gagal.
 Aturan:
 
 ```text
-AI API gagal -> coba fallback
-All AI gagal -> tampilkan error, jangan crash
+AI API gagal -> tampilkan error; /retry hanya atas permintaan pengguna
 Public IP API gagal -> tampilkan N/A
 Speedtest API gagal -> coba fallback
 Telemetry API gagal -> abaikan

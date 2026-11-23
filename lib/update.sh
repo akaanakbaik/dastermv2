@@ -5,9 +5,10 @@ dasterm_update_raw_base() {
 dasterm_update_latest_version() {
   local base latest
   base="$(dasterm_update_raw_base)"
-  latest="$(timeout 8 curl -fsSL "${base}/VERSION" 2>/dev/null || true)"
-  [ -n "$latest" ] || latest="$(timeout 8 curl -fsSL "${base}/bin/dasterm" 2>/dev/null | grep -m1 'DASTERM_VERSION_FALLBACK=' | cut -d'"' -f2 || true)"
-  [ -n "$latest" ] && echo "$latest" || echo "${DASTERM_VERSION:-2.0.0}"
+  latest="$(dasterm_timeout 8 curl -fsSL "${base}/VERSION" 2>/dev/null || true)"
+  [ -n "$latest" ] || latest="$(dasterm_timeout 8 curl -fsSL "${base}/bin/dasterm" 2>/dev/null | grep -m1 'DASTERM_VERSION_FALLBACK=' | cut -d'"' -f2 || true)"
+  [[ "$latest" =~ ^[0-9]+[.][0-9]+[.][0-9]+([-+][A-Za-z0-9._-]+)?$ ]] || return 1
+  echo "$latest"
 }
 
 dasterm_update_download() {
@@ -15,44 +16,46 @@ dasterm_update_download() {
   local base
   base="$(dasterm_update_raw_base)"
   mkdir -p "$tmp/bin" "$tmp/lib"
-  curl -fsSL "${base}/bin/dasterm" -o "$tmp/bin/dasterm"
-  for f in core.sh i18n.sh render.sh system.sh network.sh speedtest.sh ai.sh update.sh storage.sh security.sh services.sh doctor.sh telemetry.sh; do
-    curl -fsSL "${base}/lib/${f}" -o "$tmp/lib/${f}"
+  curl --connect-timeout 5 --max-time 30 -fsSL "${base}/bin/dasterm" -o "$tmp/bin/dasterm" || return 1
+  bash -n "$tmp/bin/dasterm" || return 1
+  local f
+  for f in core.sh i18n.sh ui.sh render.sh system.sh network.sh speedtest.sh ai.sh update.sh storage.sh security.sh services.sh doctor.sh telemetry.sh; do
+    curl --connect-timeout 5 --max-time 30 -fsSL "${base}/lib/${f}" -o "$tmp/lib/${f}" || return 1
+    bash -n "$tmp/lib/${f}" || return 1
   done
-  curl -fsSL "${base}/install.sh" -o "$tmp/install.sh" 2>/dev/null || true
-  curl -fsSL "${base}/VERSION" -o "$tmp/VERSION" 2>/dev/null || true
 }
 
 dasterm_update_apply() {
   local tmp="$1"
-  if [ "$(id -u)" -ne 0 ]; then
+  if [ "$(id -u)" -ne 0 ] && { [ ! -w "$DASTERM_BINARY" ] || [ ! -w "$DASTERM_LIB" ]; }; then
     if dasterm_has sudo; then
-      sudo install -m 755 "$tmp/bin/dasterm" /usr/local/bin/dasterm
-      sudo mkdir -p /usr/local/share/dasterm/lib
-      sudo cp -f "$tmp/lib/"*.sh /usr/local/share/dasterm/lib/
-      sudo chmod 644 /usr/local/share/dasterm/lib/*.sh
+      sudo cp -f "$tmp/lib/"*.sh "$DASTERM_LIB/" || return 1
+      sudo chmod 644 "$DASTERM_LIB/"*.sh || return 1
+      sudo install -m 755 "$tmp/bin/dasterm" "$DASTERM_BINARY" || return 1
     else
       dasterm_error "Update needs root permission or sudo."
       return 1
     fi
   else
-    install -m 755 "$tmp/bin/dasterm" /usr/local/bin/dasterm
-    mkdir -p /usr/local/share/dasterm/lib
-    cp -f "$tmp/lib/"*.sh /usr/local/share/dasterm/lib/
-    chmod 644 /usr/local/share/dasterm/lib/*.sh
+    cp -f "$tmp/lib/"*.sh "$DASTERM_LIB/" || return 1
+    chmod 644 "$DASTERM_LIB/"*.sh || return 1
+    install -m 755 "$tmp/bin/dasterm" "$DASTERM_BINARY" || return 1
   fi
 }
 
 dasterm_update_changelog() {
   local base
   base="$(dasterm_update_raw_base)"
-  timeout 8 curl -fsSL "${base}/CHANGELOG.md" 2>/dev/null | sed -n '1,80p' || true
+  dasterm_timeout 8 curl -fsSL "${base}/CHANGELOG.md" 2>/dev/null | sed -n '1,80p' || true
 }
 
 dasterm_update_run() {
   local current latest tmp changelog
-  current="${DASTERM_VERSION:-2.0.0}"
-  latest="$(dasterm_update_latest_version)"
+  current="${DASTERM_VERSION:-2.0.2}"
+  if ! latest="$(dasterm_update_latest_version)"; then
+    dasterm_error "Cannot determine latest version: network unavailable or invalid VERSION."
+    return 1
+  fi
   dasterm_title "$(dasterm_t update_title)"
   dasterm_kv "$(dasterm_t update_current)" "$current"
   dasterm_kv "$(dasterm_t update_latest)" "$latest"
@@ -71,14 +74,12 @@ dasterm_update_run() {
     return 0
   fi
 
-  if [ "$(id -u)" -ne 0 ] && dasterm_has sudo; then
+  if [ "$(id -u)" -ne 0 ] && { [ ! -w "$DASTERM_BINARY" ] || [ ! -w "$DASTERM_LIB" ]; } && dasterm_has sudo; then
     dasterm_info "Update membutuhkan hak akses administrator. Silakan masukkan password:"
     sudo -v || return 1
   fi
 
-  tmp="${TMPDIR:-/tmp}/dasterm-update-$$"
-  rm -rf "$tmp"
-  mkdir -p "$tmp"
+  tmp="$(mktemp -d "${TMPDIR:-/tmp}/dasterm-update.XXXXXX")" || return 1
   if dasterm_spinner_run "Downloading update" dasterm_update_download "$tmp"; then
     :
   else

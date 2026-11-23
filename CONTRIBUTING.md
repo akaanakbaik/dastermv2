@@ -1,5 +1,8 @@
 # Contributing to Dasterm v2
 
+> AI changed in v2.0.2: [docs/AI.md](docs/AI.md) is the current contract.
+> Older provider-order, daily-memory, and AI test-command notes below are historical and no longer apply.
+
 Terima kasih sudah ingin berkontribusi ke Dasterm v2.
 
 Dasterm adalah interactive terminal dashboard untuk Linux/VPS dengan fitur dashboard, speedtest cache, AI assistant, storage analyzer, service monitor, security check, updater, dan telemetry opsional.

@@ -1,0 +1,32 @@
+name: Compatibility regressions
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  behavior:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y jq shellcheck zsh curl openssl
+      - run: make test
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: cd worker && npm test
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['ubuntu:22.04', 'ubuntu:24.04', 'debian:12-slim', 'rockylinux:9', 'alpine:3.22']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repeated commands and install lifecycle
+        env:
+          IMAGE: ${{ matrix.image }}
+        run: |
+          if [[ "$IMAGE" == alpine:* ]]; then
+            docker run --rm -v "$PWD:/src:ro" "$IMAGE" sh -c 'apk add --no-cache bash && bash /src/tests/container-smoke.sh'
+          else
+            docker run --rm -v "$PWD:/src:ro" "$IMAGE" bash /src/tests/container-smoke.sh
+          fi

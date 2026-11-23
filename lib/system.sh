@@ -32,7 +32,7 @@ dasterm_os_version() {
 dasterm_virt() {
   local v
   v="$(systemd-detect-virt 2>/dev/null || true)"
-  if [ -n "$v" ]; then
+  if [ -n "$v" ] && [ "$v" != "none" ]; then
     echo "$v"
     return
   fi
@@ -44,15 +44,27 @@ dasterm_virt() {
     echo "docker"
     return
   fi
-  echo "physical/unknown"
+  if [ -d /proc/vz ] && [ ! -d /proc/bc ]; then
+    echo "openvz"
+  elif grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null; then
+    echo "wsl"
+  else
+    echo "physical/unknown"
+  fi
 }
 
 dasterm_boot_time() {
-  who -b 2>/dev/null | awk '{print $3" "$4}' || uptime -s 2>/dev/null || echo "N/A"
+  local boot
+  boot="$(uptime -s 2>/dev/null || true)"
+  [ -n "$boot" ] || boot="$(who -b 2>/dev/null | awk 'NF>=4 {print $3" "$4}')"
+  echo "${boot:-N/A}"
 }
 
 dasterm_cpu_model() {
-  awk -F: '/model name/{gsub(/^ /,"",$2); print $2; exit}' /proc/cpuinfo 2>/dev/null | cut -c1-70
+  local model
+  model="$(awk -F: '/model name|Hardware|Processor/ {gsub(/^[ \t]+/,"",$2); if(length($2)) {print $2; exit}}' /proc/cpuinfo 2>/dev/null | cut -c1-70)"
+  [ -n "$model" ] || model="$(uname -m 2>/dev/null || true)"
+  echo "${model:-N/A}"
 }
 
 dasterm_cpu_flags() {
@@ -72,31 +84,41 @@ dasterm_gpu() {
 }
 
 dasterm_ram_line() {
-  free -h 2>/dev/null | awk '/Mem:/ {
+  local value
+  value="$(free -h 2>/dev/null | awk '/Mem:/ {
     used=$3; total=$2;
     printf "%s used of %s", used, total
-  }' || echo "N/A"
+  }')"
+  echo "${value:-N/A}"
 }
 
 dasterm_ram_percent() {
-  free 2>/dev/null | awk '/Mem:/ {if($2 > 0) printf "%.1f", ($3/$2)*100; else print "0.0"}' || echo "0.0"
+  local value
+  value="$(free 2>/dev/null | awk '/Mem:/ {if($2 > 0) printf "%.1f", ($3/$2)*100; else print "0.0"}')"
+  echo "${value:-0.0}"
 }
 
 dasterm_swap_line() {
-  free -h 2>/dev/null | awk '/Swap:/ {
+  local value
+  value="$(free -h 2>/dev/null | awk '/Swap:/ {
     if($2=="0B" || $2=="0") print "Disabled";
     else printf "%s used of %s", $3, $2
-  }' || echo "N/A"
+  }')"
+  echo "${value:-N/A}"
 }
 
 dasterm_disk_line() {
   local path="${1:-/}"
-  df -h "$path" 2>/dev/null | awk 'NR==2 {printf "%s used of %s (%s)", $3, $2, $5}' || echo "N/A"
+  local value
+  value="$(df -Ph "$path" 2>/dev/null | awk 'NR==2 {printf "%s used of %s (%s)", $3, $2, $5}')"
+  echo "${value:-N/A}"
 }
 
 dasterm_disk_percent() {
   local path="${1:-/}"
-  df -P "$path" 2>/dev/null | awk 'NR==2 {gsub("%","",$5); print $5+0}' || echo 0
+  local value
+  value="$(df -P "$path" 2>/dev/null | awk 'NR==2 {gsub("%","",$5); print $5+0}')"
+  echo "${value:-0}"
 }
 
 dasterm_load_line() {
@@ -131,9 +153,13 @@ dasterm_terminal_name() {
   echo "${TERM_PROGRAM:-${TERM:-unknown}}"
 }
 
+dasterm_systemd_available() {
+  dasterm_has systemctl && [ -d /run/systemd/system ]
+}
+
 dasterm_service_state() {
   local name="$1"
-  if dasterm_has systemctl; then
+  if dasterm_systemd_available; then
     local s
     s="$(systemctl is-active "$name" 2>/dev/null || true)"
     case "$s" in
@@ -144,7 +170,13 @@ dasterm_service_state() {
     esac
     return
   fi
-  if pgrep -x "$name" >/dev/null 2>&1; then
+  if dasterm_has rc-service; then
+    if rc-service "$name" status >/dev/null 2>&1; then
+      echo "running"
+    else
+      echo "not running/unknown"
+    fi
+  elif pgrep -x "$name" >/dev/null 2>&1; then
     echo "running"
   else
     echo "not detected"
@@ -160,8 +192,10 @@ dasterm_ufw_state() {
 }
 
 dasterm_failed_units_count() {
-  if dasterm_has systemctl; then
-    systemctl --failed --no-legend 2>/dev/null | wc -l | awk '{print $1}'
+  if dasterm_systemd_available; then
+    local units
+    units="$(systemctl --failed --no-legend --plain 2>/dev/null)" || { echo "N/A"; return; }
+    printf '%s\n' "$units" | awk 'NF {n++} END {print n+0}'
   else
     echo "N/A"
   fi

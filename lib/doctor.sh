@@ -74,9 +74,9 @@ dasterm_doctor_cache() {
 }
 
 dasterm_doctor_network() {
-  if timeout 4 bash -c 'exec 3<>/dev/tcp/1.1.1.1/53' >/dev/null 2>&1; then
+  if dasterm_timeout 4 bash -c 'exec 3<>/dev/tcp/1.1.1.1/53' >/dev/null 2>&1; then
     dasterm_doctor_check "Network" ok "internet reachable"
-  elif timeout 4 ping -c1 -W2 1.1.1.1 >/dev/null 2>&1; then
+  elif dasterm_timeout 4 ping -c1 -W2 1.1.1.1 >/dev/null 2>&1; then
     dasterm_doctor_check "Network" ok "ping reachable"
   else
     dasterm_doctor_check "Network" warn "offline or blocked"
@@ -107,7 +107,7 @@ dasterm_doctor_permissions() {
 
 dasterm_doctor_summary_score() {
   local score=100
-  [ -x /usr/local/bin/dasterm ] || score=$((score - 25))
+  [ -r "$DASTERM_BINARY" ] || score=$((score - 25))
   [ -f "$DASTERM_CONFIG" ] || score=$((score - 20))
   dasterm_has curl || score=$((score - 15))
   dasterm_has jq || score=$((score - 10))
@@ -126,15 +126,15 @@ dasterm_doctor_show() {
   dasterm_theme_load
   dasterm_title "$(dasterm_t doctor_title)"
   dasterm_kv "Doctor Score" "$(dasterm_doctor_summary_score)"
-  dasterm_kv "Dasterm Version" "${DASTERM_VERSION:-2.0.0}"
+  dasterm_kv "Dasterm Version" "${DASTERM_VERSION:-2.0.2}"
   dasterm_kv "Language" "${DASTERM_LANG:-id}"
   dasterm_kv "Mode" "${DASTERM_MODE:-lite}"
   dasterm_kv "Theme" "${DASTERM_THEME:-pastel}"
   echo
 
   dasterm_title "Files"
-  dasterm_doctor_file "Binary" "/usr/local/bin/dasterm"
-  dasterm_doctor_file "Library" "/usr/local/share/dasterm/lib/core.sh"
+  dasterm_doctor_file "Binary" "$DASTERM_BINARY"
+  dasterm_doctor_file "Library" "$DASTERM_LIB/core.sh"
   dasterm_doctor_file "Config" "$DASTERM_CONFIG"
   dasterm_doctor_shell_block
   dasterm_doctor_config
